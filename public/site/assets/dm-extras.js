@@ -105,3 +105,15 @@
 
   render();
 })();
+
+/* Copyright notice and light copy protection */
+(function () {
+  try { console.log("%c© 2026 Digitmask — All rights reserved. Unauthorized copying is prohibited.", "font-weight:bold"); } catch (e) {}
+  document.addEventListener("contextmenu", function (e) {
+    if (e.target && e.target.closest && e.target.closest("input, textarea")) return;
+    e.preventDefault();
+  });
+  document.addEventListener("dragstart", function (e) {
+    if (e.target && e.target.tagName === "IMG") e.preventDefault();
+  });
+})();
