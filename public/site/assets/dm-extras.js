@@ -11,6 +11,45 @@
   var alt = new Audio();
   alt.loop = true; alt.preload = "none"; alt.volume = 0.6;
 
+  // Give the extra songs the same underwater / room sound as the built-in song.
+  var fx = null, siteFreq = 160;
+  function worldCap() { return /^\/world/.test(location.pathname) ? 4500 : 20000; }
+  function target() { return Math.min(siteFreq, worldCap()); }
+  function ensureFx() {
+    if (fx) return fx;
+    var H = window.__dmHowler; if (!H || !H.ctx) return null;
+    try {
+      var ctx = H.ctx, src = ctx.createMediaElementSource(alt), f = ctx.createBiquadFilter();
+      f.type = "lowpass"; f.Q.value = 1; f.frequency.value = target();
+      src.connect(f); f.connect(ctx.destination);
+      fx = { ctx: ctx, f: f };
+    } catch (e) { return null; }
+    return fx;
+  }
+  function rampTo(freq, ms) {
+    if (!fx) return;
+    var p = fx.f.frequency, t = fx.ctx.currentTime;
+    p.cancelScheduledValues(t); p.setValueAtTime(Math.max(20, p.value), t);
+    p.exponentialRampToValueAtTime(Math.max(20, freq), t + Math.max(.05, ms / 1000));
+  }
+  (function hook() {
+    var A = window.__dmAudio;
+    if (!A || !A.filterTo) return setTimeout(hook, 300);
+    var orig = A.filterTo.bind(A);
+    A.filterTo = function (o) {
+      try {
+        if (o && o.key === "audio.backing" && o.to && o.to.frequency) {
+          siteFreq = o.to.frequency; rampTo(target(), o.duration || 1);
+        }
+      } catch (e) {}
+      return orig(o);
+    };
+  })();
+  var lastPath = location.pathname;
+  setInterval(function () {
+    if (location.pathname !== lastPath) { lastPath = location.pathname; rampTo(target(), 1500); }
+  }, 500);
+
   function muteBtn() { return document.querySelector(".js-global-mute-btn"); }
   function siteMuted() { var h = window.__dmHowler; return h ? !!h._muted : false; }
   function setSiteMute(m) {
@@ -83,7 +122,31 @@
     if (!tb) return;
     var on = tb.dataset.togglecontent === "project";
     document.querySelectorAll(".dm-brief").forEach(function (f) { f.classList.toggle("is-visible", on); });
+    if (on && innerWidth < 768) openSheet();
   });
+
+  // Phones: the 3D contact card can't scroll, so show the form as a steady full-screen sheet.
+  var sheet = null, home = null;
+  function openSheet() {
+    var f = document.querySelector(".dm-brief"); if (!f || sheet) return;
+    home = { parent: f.parentNode, next: f.nextSibling, form: f };
+    sheet = document.createElement("div"); sheet.className = "dm-sheet";
+    sheet.innerHTML = '<button type="button" class="dm-sheet__close" aria-label="Close">&times;</button>';
+    sheet.appendChild(f); document.body.appendChild(sheet);
+    document.documentElement.classList.add("dm-sheet-open");
+  }
+  function closeSheet() {
+    if (!sheet) return;
+    home.parent.insertBefore(home.form, home.next); home.form.classList.remove("is-visible");
+    sheet.remove(); sheet = null;
+    document.documentElement.classList.remove("dm-sheet-open");
+  }
+  document.addEventListener("click", function (e) {
+    if (e.target.closest && e.target.closest(".dm-sheet__close")) closeSheet();
+  });
+  document.addEventListener("touchmove", function (e) { if (sheet) e.stopPropagation(); }, { capture: true, passive: true });
+  document.addEventListener("wheel", function (e) { if (sheet) e.stopPropagation(); }, { capture: true, passive: true });
+  setInterval(function () { if (sheet && !/^\/contact/.test(location.pathname)) closeSheet(); }, 500);
 
   document.addEventListener("submit", function (e) {
     var f = e.target;
