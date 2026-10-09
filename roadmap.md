@@ -1,4 +1,6 @@
 # Roadmap — Digitmask rebrand
+- [ ] Shorten first-visit loading without exposing an unfinished scene
+- [ ] Make Home “View our work” very small and lower, clear of the large lettering
 - [x] Logo, name, wording, contact info on all pages
 - [x] Purple → pink → orange dusk tint over the 3D world
 - [x] Project cards renamed to Digitmask services
