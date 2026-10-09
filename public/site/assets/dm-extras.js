@@ -122,7 +122,31 @@
     if (!tb) return;
     var on = tb.dataset.togglecontent === "project";
     document.querySelectorAll(".dm-brief").forEach(function (f) { f.classList.toggle("is-visible", on); });
+    if (on && innerWidth < 768) openSheet();
   });
+
+  // Phones: the 3D contact card can't scroll, so show the form as a steady full-screen sheet.
+  var sheet = null, home = null;
+  function openSheet() {
+    var f = document.querySelector(".dm-brief"); if (!f || sheet) return;
+    home = { parent: f.parentNode, next: f.nextSibling, form: f };
+    sheet = document.createElement("div"); sheet.className = "dm-sheet";
+    sheet.innerHTML = '<button type="button" class="dm-sheet__close" aria-label="Close">&times;</button>';
+    sheet.appendChild(f); document.body.appendChild(sheet);
+    document.documentElement.classList.add("dm-sheet-open");
+  }
+  function closeSheet() {
+    if (!sheet) return;
+    home.parent.insertBefore(home.form, home.next); home.form.classList.remove("is-visible");
+    sheet.remove(); sheet = null;
+    document.documentElement.classList.remove("dm-sheet-open");
+  }
+  document.addEventListener("click", function (e) {
+    if (e.target.closest && e.target.closest(".dm-sheet__close")) closeSheet();
+  });
+  document.addEventListener("touchmove", function (e) { if (sheet) e.stopPropagation(); }, { capture: true, passive: true });
+  document.addEventListener("wheel", function (e) { if (sheet) e.stopPropagation(); }, { capture: true, passive: true });
+  setInterval(function () { if (sheet && !/^\/contact/.test(location.pathname)) closeSheet(); }, 500);
 
   document.addEventListener("submit", function (e) {
     var f = e.target;
