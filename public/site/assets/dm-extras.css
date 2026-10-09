@@ -92,3 +92,9 @@
   .dm-brief__row { grid-template-columns: 1fr; gap: 0; }
 }
 @media (max-width: 600px) { [data-togglecontent="project"] { margin-top: .5rem; } .js-contact-content .d-flex.items-center.items-end\@sm { flex-wrap: wrap; row-gap: .5rem; } }
+
+/* Phone: show the Digitmask World button */
+@media (max-width: 767px) {
+  .world-btn { display: flex !important; left: auto !important; right: 1.25rem; bottom: 1.6rem !important; transform: none !important; margin-bottom: 0 !important; }
+  .world-btn__text { display: none; }
+}
