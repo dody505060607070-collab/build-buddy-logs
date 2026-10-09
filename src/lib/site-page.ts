@@ -24,7 +24,6 @@ export function sitePage(name: keyof typeof pages) {
     headers: {
       "content-type": "text/html; charset=utf-8",
       // Stop other sites from framing the site, and harden basic browser behaviour.
-      "x-frame-options": "SAMEORIGIN",
       "content-security-policy": "frame-ancestors 'self' https://*.lovable.app https://*.lovable.dev",
       "x-content-type-options": "nosniff",
       "referrer-policy": "strict-origin-when-cross-origin",
