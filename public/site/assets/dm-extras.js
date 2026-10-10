@@ -86,6 +86,8 @@
     else {
       setSiteMute(true);
       if (alt.dataset.i !== String(current)) { alt.src = TRACKS[current].src; alt.dataset.i = String(current); alt.currentTime = 0; }
+      if (ensureFx() && fx.ctx.state === "suspended") fx.ctx.resume();
+      keepGuidePlaying();
       alt.play().catch(function () {});
     }
   }
