@@ -31,7 +31,8 @@
     var A = window.__dmAudio; if (!A || !A.sprites || !A.sprites.audio) return null;
     var id = A.activeSounds && A.activeSounds["audio.backing"]; if (id == null) return null;
     var spr = A.sprites.audio, s = spr._soundById ? spr._soundById(id) : null; if (!s) return null;
-    return { freq: s.filter ? s.filter.frequency.value : 22000, vol: spr.volume(id) };
+    var bs = s._node && s._node.bufferSource;
+    return { freq: s.filter ? s.filter.frequency.value : 22000, vol: spr.volume(id), rate: bs ? bs.playbackRate.value : 1 };
   }
   function keepGuidePlaying() {
     var A = window.__dmAudio;
@@ -46,10 +47,16 @@
   }
   setInterval(function () {
     if (!fx || alt.paused) return;
-    var gd = guide(); if (!gd) { keepGuidePlaying(); return; }
-    var t = fx.ctx.currentTime;
+    var t = fx.ctx.currentTime, gd = guide(), inWorld = /^\/world/.test(location.pathname);
+    if (!gd) {
+      // The site stops its own song inside Digitmask World: keep ours, but softer and dreamier.
+      if (inWorld) gd = { freq: 2600, vol: 0.75, rate: 1 };
+      else { keepGuidePlaying(); return; }
+    }
     fx.f.frequency.setTargetAtTime(Math.max(40, Math.min(gd.freq, worldCap())), t, 0.08);
     fx.g.gain.setTargetAtTime(Math.max(0, Math.min(1, gd.vol)), t, 0.08);
+    var r = Math.max(0.5, Math.min(1, gd.rate || 1));
+    if (Math.abs(alt.playbackRate - r) > 0.01) { alt.preservesPitch = false; alt.playbackRate = r; }
   }, 60);
 
   function muteBtn() { return document.querySelector(".js-global-mute-btn"); }
