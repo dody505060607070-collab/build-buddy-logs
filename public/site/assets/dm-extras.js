@@ -24,7 +24,7 @@
       f.type = "lowpass"; f.Q.value = 1; f.frequency.value = 160; g.gain.value = 1;
       src.connect(f); f.connect(g); g.connect(ctx.destination); // skips the site's own mute
       fx = window.__dmSongFx = { ctx: ctx, f: f, g: g };
-    } catch (e) { return null; }
+    } catch (e) { window.__dmFxErr = String(e); return null; }
     return fx;
   }
   function guide() {
