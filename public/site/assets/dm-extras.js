@@ -36,7 +36,12 @@
   function keepGuidePlaying() {
     var A = window.__dmAudio;
     if (A && A.play && A.isPlaying && !A.isPlaying("audio.backing")) {
-      try { A.play({ key: "audio.backing", fade: { from: 0, to: 1, duration: 1 } }); } catch (e) {}
+      try {
+        A.play({ key: "audio.backing", fade: { from: 0, to: 1, duration: 1 } });
+        // Same starting sound the site gives its own song on this page.
+        var home = location.pathname === "/" || location.pathname === "";
+        A.filterTo({ key: "audio.backing", duration: 1, type: "lowpass", from: { frequency: 14e3 }, to: { frequency: home ? 160 : 2e4 } });
+      } catch (e) {}
     }
   }
   setInterval(function () {
