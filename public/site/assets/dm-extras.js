@@ -23,7 +23,7 @@
       var ctx = H.ctx, src = ctx.createMediaElementSource(alt), f = ctx.createBiquadFilter(), g = ctx.createGain();
       f.type = "lowpass"; f.Q.value = 1; f.frequency.value = 160; g.gain.value = 1;
       src.connect(f); f.connect(g); g.connect(ctx.destination); // skips the site's own mute
-      fx = { ctx: ctx, f: f, g: g };
+      fx = window.__dmSongFx = { ctx: ctx, f: f, g: g };
     } catch (e) { return null; }
     return fx;
   }
