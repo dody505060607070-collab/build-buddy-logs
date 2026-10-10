@@ -11,44 +11,53 @@
   var alt = new Audio();
   alt.loop = true; alt.preload = "none"; alt.volume = 0.6;
 
-  // Give the extra songs the same underwater / room sound as the built-in song.
-  var fx = null, siteFreq = 160;
-  function worldCap() { return /^\/world/.test(location.pathname) ? 4500 : 20000; }
-  function target() { return Math.min(siteFreq, worldCap()); }
+  // Every extra song copies the built-in song's live sound: the same underwater
+  // muffling and the same fades (View our work, Projects, Contact, World).
+  // The built-in song keeps playing silently and acts as the "guide".
+  var fx = null;
+  function worldCap() { return /^\/world/.test(location.pathname) ? 4500 : 22000; }
   function ensureFx() {
     if (fx) return fx;
     var H = window.__dmHowler; if (!H || !H.ctx) return null;
     try {
-      var ctx = H.ctx, src = ctx.createMediaElementSource(alt), f = ctx.createBiquadFilter();
-      f.type = "lowpass"; f.Q.value = 1; f.frequency.value = target();
-      src.connect(f); f.connect(ctx.destination);
-      fx = { ctx: ctx, f: f };
-    } catch (e) { return null; }
+      var ctx = H.ctx, src = ctx.createMediaElementSource(alt), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      f.type = "lowpass"; f.Q.value = 1; f.frequency.value = 160; g.gain.value = 1;
+      src.connect(f); f.connect(g); g.connect(ctx.destination); // skips the site's own mute
+      fx = window.__dmSongFx = { ctx: ctx, f: f, g: g };
+    } catch (e) { window.__dmFxErr = String(e); return null; }
     return fx;
   }
-  function rampTo(freq, ms) {
-    if (!fx) return;
-    var p = fx.f.frequency, t = fx.ctx.currentTime;
-    p.cancelScheduledValues(t); p.setValueAtTime(Math.max(20, p.value), t);
-    p.exponentialRampToValueAtTime(Math.max(20, freq), t + Math.max(.05, ms / 1000));
+  function guide() {
+    var A = window.__dmAudio; if (!A || !A.sprites || !A.sprites.audio) return null;
+    var id = A.activeSounds && A.activeSounds["audio.backing"]; if (id == null) return null;
+    var spr = A.sprites.audio, s = spr._soundById ? spr._soundById(id) : null; if (!s) return null;
+    var bs = s._node && s._node.bufferSource;
+    return { freq: s.filter ? s.filter.frequency.value : 22000, vol: spr.volume(id), rate: bs ? bs.playbackRate.value : 1 };
   }
-  (function hook() {
+  function keepGuidePlaying() {
     var A = window.__dmAudio;
-    if (!A || !A.filterTo) return setTimeout(hook, 300);
-    var orig = A.filterTo.bind(A);
-    A.filterTo = function (o) {
+    if (A && A.play && A.isPlaying && !A.isPlaying("audio.backing")) {
       try {
-        if (o && o.key === "audio.backing" && o.to && o.to.frequency) {
-          siteFreq = o.to.frequency; rampTo(target(), o.duration || 1);
-        }
+        A.play({ key: "audio.backing", fade: { from: 0, to: 1, duration: 1 } });
+        // Same starting sound the site gives its own song on this page.
+        var home = location.pathname === "/" || location.pathname === "";
+        A.filterTo({ key: "audio.backing", duration: 1, type: "lowpass", from: { frequency: 14e3 }, to: { frequency: home ? 160 : 2e4 } });
       } catch (e) {}
-      return orig(o);
-    };
-  })();
-  var lastPath = location.pathname;
+    }
+  }
   setInterval(function () {
-    if (location.pathname !== lastPath) { lastPath = location.pathname; rampTo(target(), 1500); }
-  }, 500);
+    if (!fx || alt.paused) return;
+    var t = fx.ctx.currentTime, gd = guide(), inWorld = /^\/world/.test(location.pathname);
+    if (!gd) {
+      // The site stops its own song inside Digitmask World: keep ours, but softer and dreamier.
+      if (inWorld) gd = { freq: 2600, vol: 0.75, rate: 1 };
+      else { keepGuidePlaying(); return; }
+    }
+    fx.f.frequency.setTargetAtTime(Math.max(40, Math.min(gd.freq, worldCap())), t, 0.08);
+    fx.g.gain.setTargetAtTime(Math.max(0, Math.min(1, gd.vol)), t, 0.08);
+    var r = Math.max(0.5, Math.min(1, gd.rate || 1));
+    if (Math.abs(alt.playbackRate - r) > 0.01) { alt.preservesPitch = false; alt.playbackRate = r; }
+  }, 60);
 
   function muteBtn() { return document.querySelector(".js-global-mute-btn"); }
   function siteMuted() { var h = window.__dmHowler; return h ? !!h._muted : false; }
@@ -89,6 +98,8 @@
     else {
       setSiteMute(true);
       if (alt.dataset.i !== String(current)) { alt.src = TRACKS[current].src; alt.dataset.i = String(current); alt.currentTime = 0; }
+      if (ensureFx() && fx.ctx.state === "suspended") fx.ctx.resume();
+      keepGuidePlaying();
       alt.play().catch(function () {});
     }
   }
