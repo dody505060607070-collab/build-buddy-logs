@@ -114,6 +114,3 @@
 .dm-np .project-filters__filter { display: none !important; }
 .dm-glass { color: rgba(255,255,255,.18) !important; -webkit-text-stroke: 1px rgba(255,255,255,.75); text-shadow: 0 2px 24px rgba(255,255,255,.35), 0 0 1px rgba(255,255,255,.9); background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.15) 60%, rgba(255,255,255,.45)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 .dm-np-sub { margin: .6rem 0 0; text-align: center; font-family: "Neue Montreal", system-ui, sans-serif; font-size: .95rem; letter-spacing: .08em; color: rgba(255,255,255,.85); }
-/* 5th menu item (NotePin): keep all items fitting on small screens */
-@media (max-width: 767px) { .menu__nav { flex-direction: column; } .menu__nav-item .menu__text { font-size: min(13vw, 4.2rem); line-height: 1.02; } }
-@media (max-height: 640px) and (max-width: 767px) { .menu__nav-item .menu__text { font-size: 10vw; } }
