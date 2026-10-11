@@ -200,3 +200,7 @@
   .dm-npx__view span { display: none; }
   .dm-npx__view { padding: 4px; }
 }
+/* Darker smoked glass so white text always reads on the bright water. */
+.dm-npx .dm-glass { background: linear-gradient(135deg, rgba(40,16,70,.46), rgba(40,16,70,.26)); border-color: rgba(255,255,255,.28); color: #fff; }
+.dm-npx .dm-glass h3, .dm-npx .dm-glass p, .dm-npx .dm-glass span, .dm-npx .dm-glass b { color: #fff; opacity: 1; }
+.dm-npx .dm-glass .dm-npx__kicker { color: #ffb48a; }
