@@ -219,24 +219,57 @@ var TO_MARS = BASE+'/5fc5651c-3b5d-4171-b507-87f7e635d1b4.mp4';
 var MERCURY = BASE+'/d6fb8b6b-c15e-4aaa-9cf7-45bbb5e33372.jpg';
 
 var planets = ['Mercury','Venus','Earth','Mars','Jupiter','Saturn','Uranus','Neptune'];
+// Journey order: scroll down travels to the next one, scroll up goes back.
+var order = ['mars','earth','venus','mercury','jupiter','saturn','uranus','neptune'];
 
 var states = {
- mars:  { name:'Mars',  next:'Earth',   number:'[03]', portal:TO_EARTH,  background:'mars-background',
+ mars:  { name:'Mars', clip:TO_MARS, background:'mars-background',
    facts:[['Distance:','About 228 million km (1.5 astronomical units).'],
           ['Year:','One Martian year is equal to 687 Earth days.'],
           ['Temperature:','Around -60 °C, dropping to -125 °C at the poles in winter.'],
           ['Atmosphere:','Very thin, consisting of 95% carbon dioxide, with frequent dust storms.']] },
- earth: { name:'Earth', next:'Venus',   number:'[02]', portal:TO_VENUS,  background:'earth-background',
+ earth: { name:'Earth', clip:TO_EARTH, background:'earth-background',
    facts:[['Distance:','149.6 million km from the Sun.'],
           ['Year:','365.25 Earth days.'],
           ['Temperature:','Average surface temperature around 15 °C.'],
           ['Atmosphere:','Mostly nitrogen and oxygen, supporting life and liquid water.']] },
- venus: { name:'Venus', next:'Mercury', number:'[06]', image:MERCURY,    background:'venus-background',
+ venus: { name:'Venus', clip:TO_VENUS, background:'venus-background',
    facts:[['Distance:','108.2 million km from the Sun.'],
           ['Year:','225 Earth days.'],
           ['Temperature:','Around 465 °C — the hottest planet in the Solar System.'],
-          ['Atmosphere:','Extremely dense, mostly carbon dioxide, with clouds of sulfuric acid.']] }
+          ['Atmosphere:','Extremely dense, mostly carbon dioxide, with clouds of sulfuric acid.']] },
+ mercury: { name:'Mercury', image:MERCURY, background:'mercury-background',
+   facts:[['Distance:','57.9 million km from the Sun — the closest planet.'],
+          ['Year:','Just 88 Earth days.'],
+          ['Temperature:','About 430 °C by day, down to -180 °C at night.'],
+          ['Atmosphere:','Almost none: a thin haze of oxygen, sodium and hydrogen.']] },
+ jupiter: { name:'Jupiter', image:'/examples/media/jupiter.jpg', background:'jupiter-background',
+   facts:[['Distance:','778.5 million km (5.2 astronomical units).'],
+          ['Year:','11.9 Earth years.'],
+          ['Temperature:','About -110 °C at the cloud tops.'],
+          ['Atmosphere:','Hydrogen and helium, home to the giant storm of the Great Red Spot.']] },
+ saturn: { name:'Saturn', image:'/examples/media/saturn.jpg', background:'saturn-background',
+   facts:[['Distance:','1.43 billion km (9.5 astronomical units).'],
+          ['Year:','29.4 Earth years.'],
+          ['Temperature:','About -140 °C.'],
+          ['Atmosphere:','Hydrogen and helium, wrapped in rings of ice and rock.']] },
+ uranus: { name:'Uranus', image:'/examples/media/uranus.jpg', background:'uranus-background',
+   facts:[['Distance:','2.87 billion km (19.2 astronomical units).'],
+          ['Year:','84 Earth years.'],
+          ['Temperature:','About -195 °C; it spins tipped on its side.'],
+          ['Atmosphere:','Hydrogen, helium and methane, which gives its pale blue-green colour.']] },
+ neptune: { name:'Neptune', image:'/examples/media/neptune.jpg', background:'neptune-background',
+   facts:[['Distance:','4.5 billion km (30 astronomical units).'],
+          ['Year:','165 Earth years.'],
+          ['Temperature:','About -200 °C.'],
+          ['Atmosphere:','Hydrogen, helium and methane, with the fastest winds in the Solar System.']] }
 };
+order.forEach(function(k, i){
+  var n = order[i+1];
+  states[k].nextKey = n || null;
+  states[k].next = n ? states[n].name : '';
+  states[k].number = n ? '[0'+(planets.indexOf(states[n].name)+1)+']' : '';
+});
 
 var current = 'mars';
 var body = document.body;
@@ -261,14 +294,16 @@ var sceneCanvas = document.getElementById('scene-canvas');
 var sceneCtx = sceneCanvas.getContext('2d');
 
 var firstRender = true;
+var showPortalImage = false;
 
 function render(){
   var state = states[current];
   experience.dataset.planet = current;
+  experience.classList.toggle('is-last', !state.nextKey);
   planetTitle.textContent = state.name.toUpperCase();
   nextName.textContent = state.next;
   nextNumber.textContent = state.number;
-  portalBtn.setAttribute('aria-label','Travel to '+state.next);
+  portalBtn.setAttribute('aria-label', state.next ? 'Travel to '+state.next : 'Last planet');
 
   factsEl.innerHTML = '';
   state.facts.forEach(function(f){
@@ -282,10 +317,15 @@ function render(){
 
   planetList.innerHTML = '';
   planets.forEach(function(p){
-    var span = document.createElement('span');
-    span.className = 'planet-item' + (p === state.name ? ' active' : '');
-    span.textContent = p;
-    planetList.appendChild(span);
+    var key = p.toLowerCase();
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'planet-item' + (key === current ? ' active' : '');
+    b.dataset.key = key;
+    b.textContent = p;
+    if(key === current) b.setAttribute('aria-current', 'true');
+    else b.setAttribute('aria-label', 'Travel to ' + p);
+    planetList.appendChild(b);
   });
 
   if(!firstRender){
@@ -298,22 +338,27 @@ function render(){
   document.querySelectorAll('.background').forEach(function(v){
     v.classList.toggle('is-visible', v.id === state.background);
   });
+  var bg = document.getElementById(state.background);
+  if(bg && bg.tagName === 'IMG' && !bg.getAttribute('src')) bg.src = state.image;
+  // Travel clips used as a backdrop hold on their last frame (the planet you arrived at).
+  if(bg && bg.tagName === 'VIDEO' && bg.id !== 'mars-background'){
+    var hold = function(){ try { bg.pause(); bg.currentTime = Math.max(0, (bg.duration||0) - .08); } catch(e){} };
+    if(bg.readyState >= 1) hold(); else bg.addEventListener('loadedmetadata', hold, {once:true});
+  }
 
-  if(state.image){
-    portalImage.style.visibility = '';
-    portalVideo.style.visibility = '';
-    portalImage.src = state.image;
-    showPortalImage = true;
-  } else {
+  var nx = state.nextKey ? states[state.nextKey] : null;
+  if(!nx) return;
+  if(nx.clip){
     showPortalImage = false;
-    if(portalVideo.getAttribute('src') !== state.portal){
-      portalVideo.src = state.portal;
+    if(portalVideo.getAttribute('src') !== nx.clip){
+      portalVideo.src = nx.clip;
       portalVideo.load();
     }
+  } else {
+    showPortalImage = true;
+    if(portalImage.getAttribute('src') !== nx.image) portalImage.src = nx.image;
   }
 }
-
-var showPortalImage = false;
 
 // ===== Preloader =====
 var preloadFinished = false;
