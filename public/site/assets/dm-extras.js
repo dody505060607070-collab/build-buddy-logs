@@ -34,8 +34,11 @@
     var bs = s._node && s._node.bufferSource;
     return { freq: s.filter ? s.filter.frequency.value : 22000, vol: spr.volume(id), rate: bs ? bs.playbackRate.value : 1 };
   }
+  var guideAt = 0;
   function keepGuidePlaying() {
     var A = window.__dmAudio;
+    if (Date.now() - guideAt < 2500) return;
+    guideAt = Date.now();
     if (A && A.play && A.isPlaying && !A.isPlaying("audio.backing")) {
       try {
         A.play({ key: "audio.backing", fade: { from: 0, to: 1, duration: 1 } });
@@ -46,6 +49,8 @@
     }
   }
   setInterval(function () {
+    var b = muteBtn();
+    if (b && !b.style.getPropertyValue("--dm-art")) render();
     if (!fx || alt.paused) return;
     var t = fx.ctx.currentTime, gd = guide(), inWorld = /^\/world/.test(location.pathname);
     if (!gd) {
@@ -54,7 +59,8 @@
       else { keepGuidePlaying(); return; }
     }
     fx.f.frequency.setTargetAtTime(Math.max(40, Math.min(gd.freq, worldCap())), t, 0.08);
-    fx.g.gain.setTargetAtTime(Math.max(0, Math.min(1, gd.vol)), t, 0.08);
+    // Interstellar owns NotePin and World: the chosen song steps aside there.
+    fx.g.gain.setTargetAtTime(window.__dmInterOn ? 0 : Math.max(0, Math.min(1, gd.vol)), t, 0.08);
     var r = Math.max(0.5, Math.min(1, gd.rate || 1));
     if (Math.abs(alt.playbackRate - r) > 0.01) { alt.preservesPitch = false; alt.playbackRate = r; }
   }, 60);
@@ -245,31 +251,42 @@
   }, 250);
 })();
 
-/* Interstellar: plays from 2:10 (file is pre-trimmed) and loops. Quiet on Home,
-   full on NotePin and World, fades out elsewhere. Respects the music panel's mute. */
+/* Interstellar: plays from 2:10 (file is pre-trimmed) and loops, ONLY on NotePin and World.
+   Everywhere else it is fully stopped. While it plays, the other music steps aside so two
+   songs never overlap. Respects the music panel's mute. */
 (function () {
-  var a = new Audio("/site/assets/track-interstellar.mp3?v=1");
-  a.loop = true; a.preload = "auto"; a.volume = 0;
-  var started = false, vol = 0;
+  var a = new Audio();
+  a.loop = true; a.preload = "none"; a.volume = 0;
+  var SRC = "/site/assets/track-interstellar.mp3?v=1";
+  var unlocked = false, vol = 0, ducked = false;
+  function here() { return /^\/(notepin|world)(\/|$)/.test(location.pathname); }
   function target() {
-    if (document.hidden || window.__dmMusicMuted) return 0;
-    var p = location.pathname;
-    if (/^\/(notepin|world)/.test(p)) return 0.55;
-    if (p === "/" || p === "") return 0.12;
-    return 0;
+    if (document.hidden || window.__dmMusicMuted || !here()) return 0;
+    return 0.55;
   }
-  function kick() {
-    if (started) return; started = true;
-    a.play().catch(function () { started = false; });
+  function start() {
+    if (!a.src) a.src = SRC;
+    a.play().catch(function () {});
   }
-  ["click", "touchend", "keydown"].forEach(function (ev) { document.addEventListener(ev, kick, true); });
-  a.addEventListener("ended", function () { a.currentTime = 0; a.play().catch(function () {}); });
+  function unlock() { unlocked = true; if (target() > 0 && a.paused) start(); }
+  ["click", "touchend", "keydown"].forEach(function (ev) { document.addEventListener(ev, unlock, true); });
+  function duck(on) {
+    var H = window.__dmHowler; if (!H || !H.masterGain || !H.ctx) return;
+    if (on === ducked) return; ducked = on;
+    try {
+      var g = H.masterGain.gain, t = H.ctx.currentTime;
+      g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
+      g.setTargetAtTime(on || H._muted ? 0 : (H._volume == null ? 1 : H._volume), t, 0.25);
+    } catch (e) {}
+  }
   setInterval(function () {
     var t = target();
-    vol += (t - vol) * 0.08; if (Math.abs(t - vol) < 0.003) vol = t;
+    window.__dmInterOn = t > 0;
+    duck(t > 0);
+    if (t > 0 && unlocked && a.paused) start();
+    vol += (t - vol) * 0.1; if (Math.abs(t - vol) < 0.004) vol = t;
     a.volume = Math.max(0, Math.min(1, vol));
-    if (started && a.paused && vol > 0.01 && !document.hidden) a.play().catch(function () {});
-    if (vol === 0 && t === 0 && !a.paused && document.hidden) a.pause();
+    if (t === 0 && vol === 0 && !a.paused) a.pause();
   }, 50);
 })();
 
@@ -277,7 +294,7 @@
    see-through background with features spread down the page (no project tiles). It opens
    on its own timer, so it never waits on the 3D scene. */
 (function () {
-  var el, shownAt = 0, entered = 0;
+  var el, shownAt = 0, entered = 0, leftAt = 0;
   document.addEventListener("click", function (e) {
     if (e.target.closest && e.target.closest(".js-enter-btn, .js-enter-no-audio-btn, .loader button")) entered = Date.now();
   }, true);
@@ -325,11 +342,57 @@
     if (!document.body) return; if (!el) build();
     var on = /^\/notepin/.test(location.pathname);
     document.documentElement.classList.toggle("dm-on-np", on);
-    if (!on) { shownAt = 0; el.classList.remove("is-visible"); return; }
+    if (on) { window.__dmFromNp = true; leftAt = 0; }
+    else if (window.__dmFromNp) { if (!leftAt) leftAt = Date.now(); else if (Date.now() - leftAt > 4000) window.__dmFromNp = false; }
+    if (!on) {
+      shownAt = 0;
+      // Projects is a different place: never let the NotePin layer linger there.
+      el.classList.toggle("is-instant", /^\/projects/.test(location.pathname));
+      el.classList.remove("is-visible");
+      if (!window.__dmFromNp) el.scrollTop = 0;
+      return;
+    }
+    el.classList.remove("is-instant");
     if (!shownAt) shownAt = Date.now();
     var L = document.querySelector(".loader.js-loader"), cs = L && getComputedStyle(L);
     var ready = !L || cs.visibility === "hidden" || cs.display === "none" || +cs.opacity < .1;
     // Show after the rise finishes, or 4s after Enter whatever the scene is doing.
     if ((ready && Date.now() - shownAt > 1200) || (entered && Date.now() - entered > 4000) || Date.now() - shownAt > 15000) el.classList.add("is-visible");
   }, 200);
+})();
+
+
+/* Smoothness: picture sharpness follows the device. The scene starts at a level chosen from
+   the phone/computer's strength, then steps down if frames drop and back up if there is room. */
+(function () {
+  var frames = 0, since = 0, steps = 0, last = location.pathname, quietUntil = 0;
+  function gl() { var G = window.__dmG; return G && G.Gl && G.Gl.renderer ? G.Gl : null; }
+  function setPR(pr) {
+    var G = gl(), o = window.__dmG; if (!G) return;
+    try {
+      G.renderer.setPixelRatio(pr); G.composer.setPixelRatio(pr);
+      var w = o.window.w, h = o.window.fullHeight;
+      G.composer.setSize(w, h);
+      if (G.fxaaPass) G.fxaaPass.material.uniforms.resolution.value.set(1 / (w * pr), 1 / (h * pr));
+      if (G.globalUniforms && G.globalUniforms.u_resolution) G.globalUniforms.u_resolution.value.set(w * pr, h * pr);
+    } catch (e) {}
+  }
+  function ready() {
+    var L = document.querySelector(".loader.js-loader"), cs = L && getComputedStyle(L);
+    return !L || cs.visibility === "hidden" || cs.display === "none" || +cs.opacity < .1;
+  }
+  function tick(now) {
+    requestAnimationFrame(tick);
+    if (location.pathname !== last) { last = location.pathname; quietUntil = now + 3500; frames = 0; since = 0; }
+    if (document.hidden || now < quietUntil || !ready() || !gl()) { frames = 0; since = 0; return; }
+    if (!since) { since = now; frames = 0; return; }
+    frames++;
+    if (now - since < 3000) return;
+    var fps = frames * 1000 / (now - since); frames = 0; since = now;
+    var G = gl(), pr = G.renderer.getPixelRatio(), cap = window.__dmPR || 1.5;
+    var floor = matchMedia("(pointer:coarse)").matches ? 0.75 : 1;
+    if (fps < 45 && pr > floor + 0.01) { setPR(Math.max(floor, pr - 0.25)); steps++; }
+    else if (fps > 58 && pr < cap - 0.01 && steps < 6) { setPR(Math.min(cap, pr + 0.25)); steps++; }
+  }
+  requestAnimationFrame(tick);
 })();

@@ -161,3 +161,8 @@
 }
 
 .dm-on-np .header .nav-item, .dm-on-np .header .nav-item__text, .dm-on-np .header__logo { color: #fff4ea !important; }
+
+/* NotePin sits above Home: it comes down into view and goes back up when you leave. */
+.dm-npx { transform: translate3d(0,-70vh,0); transition: opacity 1.2s ease, transform 2.4s cubic-bezier(.76,0,.24,1), visibility 2.4s; }
+.dm-npx.is-visible { transform: none; transition: opacity 1s ease, transform 1.8s cubic-bezier(.22,1,.36,1), visibility 0s; }
+.dm-npx.is-instant { transition: none !important; opacity: 0 !important; visibility: hidden !important; }
