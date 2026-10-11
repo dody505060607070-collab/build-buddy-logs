@@ -453,24 +453,48 @@
   requestAnimationFrame(tick);
 })();
 
-/* Examples open with a sideways slide, like moving through the water to the side. */
+/* Examples open inside the site: the water slides away to the left and the example glides in from the right. */
 (function () {
-  var going = false;
-  function slide(url) {
-    if (going) return; going = true;
-    var o = document.createElement("div"); o.className = "dm-side";
-    document.body.appendChild(o); document.documentElement.classList.add("dm-siding");
-    requestAnimationFrame(function () { o.classList.add("is-on"); });
-    setTimeout(function () { location.href = url; }, 1100);
-  }
+  var box = null, busy = 0;
   function isEx(u) { try { return /^\/examples\//.test(new URL(u, location.href).pathname); } catch (e) { return false; } }
+  function close() {
+    if (!box) return; var b = box; box = null;
+    b.classList.remove("is-on"); document.documentElement.classList.remove("dm-siding");
+    setTimeout(function () { b.remove(); }, 1200);
+  }
+  function open(url) {
+    if (Date.now() - busy < 1300) return; busy = Date.now();
+    url = new URL(url, location.href).pathname;
+    if (box) { // next example: slide the current one away, the next one in
+      var old = box.querySelector("iframe"), f = document.createElement("iframe");
+      f.src = url; f.title = "Example"; f.className = "dm-ex__f is-next"; box.appendChild(f);
+      requestAnimationFrame(function () { requestAnimationFrame(function () { old.classList.add("is-out"); f.classList.remove("is-next"); }); });
+      setTimeout(function () { old.remove(); }, 1300); return;
+    }
+    box = document.createElement("div"); box.className = "dm-ex";
+    box.innerHTML = '<iframe class="dm-ex__f" title="Example" allow="autoplay; fullscreen"></iframe><button class="dm-ex__back" type="button">← Back to Examples</button>';
+    box.querySelector("iframe").src = url;
+    box.querySelector("button").addEventListener("click", close);
+    document.body.appendChild(box); document.documentElement.classList.add("dm-siding");
+    requestAnimationFrame(function () { requestAnimationFrame(function () { box && box.classList.add("is-on"); }); });
+  }
+  window.__dmOpenExample = open;
   document.addEventListener("click", function (e) {
     var a = e.target.closest && e.target.closest("a[href]");
-    if (a && isEx(a.href)) { e.preventDefault(); e.stopPropagation(); slide(a.href); }
+    if (a && isEx(a.href) && !a.closest(".dm-ex")) { e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); open(a.href); }
   }, true);
   ["pushState", "replaceState"].forEach(function (k) {
     var f = history[k];
-    history[k] = function (st, t, u) { if (u && isEx(u)) { slide(new URL(u, location.href).href); return; } return f.apply(this, arguments); };
+    history[k] = function (st, t, u) { if (u && isEx(u)) { open(u); return; } return f.apply(this, arguments); };
   });
-  window.addEventListener("pageshow", function () { going = false; var o = document.querySelector(".dm-side"); if (o) o.remove(); document.documentElement.classList.remove("dm-siding"); });
+  var hooked = setInterval(function () {
+    var H = window.__dmG && window.__dmG.Highway; if (!H || !H.redirect || H.redirect.__dm) return;
+    var r = H.redirect; H.redirect = function (u) { if (u && isEx(u)) return open(u); return r.apply(this, arguments); }; H.redirect.__dm = 1; clearInterval(hooked);
+  }, 300);
+  window.addEventListener("message", function (e) {
+    if (e.origin !== location.origin || !e.data) return;
+    if (e.data.dm === "next-example") open("/examples/planet-jumping.html");
+    if (e.data.dm === "close-example") close();
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
 })();
