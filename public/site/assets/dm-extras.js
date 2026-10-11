@@ -403,7 +403,7 @@
     // Appear only once the rise above the water has finished (fallback if the scene stalls).
     var H = window.__dmG && window.__dmG.Highway, moving = H && H.running;
     if (moving || !ready) doneAt = 0; else if (!doneAt) doneAt = Date.now();
-    if (doneAt || Date.now() - shownAt > 7000) el.classList.add("is-visible");
+    if (doneAt || Date.now() - shownAt > 7000) { el.classList.add("is-visible"); if (L && ready) L.style.visibility = "hidden"; }
   }, 200);
 })();
 
