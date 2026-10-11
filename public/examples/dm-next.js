@@ -46,7 +46,7 @@
   function push(d) {
     if (!atEnd()) { set(0); return; }
     el.classList.remove("is-mini"); set(p + d); if (p >= 1) go();
-    clearTimeout(idleT); idleT = setTimeout(function relax() { if (p > 0 && !gone) { set(p - .04); idleT = setTimeout(relax, 30); } else if (!gone) el.classList.add("is-mini"); }, 900);
+    clearTimeout(idleT); idleT = setTimeout(function relax() { if (p > 0 && !gone) { set(p - .02); idleT = setTimeout(relax, 30); } else if (!gone) el.classList.add("is-mini"); }, 1500);
   }
   function check() { var want = atEnd(); if (want !== shown) { shown = want; el.classList.toggle("is-on", want); if (!want) set(0); } }
   function add() {
