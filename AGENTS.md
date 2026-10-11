@@ -14,4 +14,6 @@
 - Resolve known bundled asset URLs directly in the exported HTML and scene asset helper to avoid redirect overhead; retain the WordPress compatibility handler for unmapped requests.
 - Keep scene geometry and textures in the opening readiness gate, but load optional audio independently so sound downloads cannot delay entry or strand the loader.
 - Extra music tracks (TRACKS in public/site/assets/dm-extras.js) play through a Web Audio filter+gain that copies the built-in song's live filter, volume and speed every frame (the built-in song keeps playing silently as the guide), so any new track added to TRACKS automatically reacts to water, page changes and World.
-- The NotePin sales page is a normal React route (src/routes/notepin.tsx) reached from a Home DOM button in dm-extras.js that plays a CSS 'rise above the water' transition, because the minified 3D scene can't safely get a new reverse camera path.
+- NotePin (/notepin/) reuses the Projects water scene with the camera flipped upward, plus its own DOM overlay from dm-extras.js; leaving it reads window.__dmFromNp in the scene's out-transitions so the camera descends, and NotePin tiles are kept out of projects.html so they never show on Projects.
+- Interstellar plays only on NotePin and World and ducks all other music (Howler master gain and the extra-track gain) there, so two songs never overlap.
+- Render sharpness is tiered: the scene's starting pixel ratio comes from device strength (window.__dmPR) and dm-extras.js steps it down/up from measured frame rate, so slow phones stay smooth.
