@@ -228,7 +228,7 @@
     document.body.appendChild(btn);
     var go = function (e) {
       e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
-      if (go.busy) return; go.busy = true; setTimeout(function () { go.busy = false; }, 1500);
+      if (go.busy) return; go.busy = true; window.__dmGoingNp = Date.now(); setTimeout(function () { go.busy = false; }, 1500);
       var H = window.__dmG && window.__dmG.Highway;
       try { if (H && H.redirect) H.redirect(location.origin + "/notepin/"); else location.href = "/notepin/"; }
       catch (er) { location.href = "/notepin/"; }
@@ -238,6 +238,13 @@
     btn.addEventListener("click", go, true);
     btn.addEventListener("pointerdown", function (e) { e.stopPropagation(); }, true);
   }
+  document.addEventListener("click", function (e) {
+    if (!e.isTrusted) return; var a = e.target.closest && e.target.closest("a[href], .dm-rise, .dm-nav-np"); if (!a || a.closest(".dm-music, .dm-sheet")) return;
+    if (a.closest(".dm-npx") && !/^\/(contact|projects|world)?\/?$/.test(new URL(a.href || location.href, location.href).pathname) && !a.classList.contains("dm-nav-np")) return;
+    var H = window.__dmG && window.__dmG.Highway, now = Date.now();
+    if ((H && H.running) || now - (window.__dmNavAt || 0) < 2200) { e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); return; }
+    if (a.href && new URL(a.href, location.href).origin === location.origin) window.__dmNavAt = now;
+  }, true);
   // Projects <-> NotePin share one scene: switch with a normal page load.
   document.addEventListener("click", function (e) {
     var a = e.target.closest && e.target.closest("a[href]"); if (!a) return;
@@ -252,7 +259,8 @@
     if (pending !== null && apply(false)) pending = null;
     // NotePin floats over empty water: the Projects tiles are hidden there.
     var PMg = window.__dmG && window.__dmG.ProjectMenu && window.__dmG.ProjectMenu.projects;
-    if (PMg && "visible" in PMg) PMg.visible = !isNp(p);
+    if (PMg && "visible" in PMg) PMg.visible = !isNp(p) && !(window.__dmGoingNp && Date.now() - window.__dmGoingNp < 7000);
+    if (isNp(p)) window.__dmGoingNp = 0;
     var L = document.querySelector(".loader.js-loader"), cs = L && getComputedStyle(L);
     var M = document.querySelector(".js-menu"), mOpen = M && M.classList.contains("is-open");
     var show = !mOpen && p === "/" && (!L || cs.visibility === "hidden" || cs.display === "none" || +cs.opacity < .1);
@@ -315,10 +323,7 @@
     ["Summaries by morning", "Key points, deadlines and action items, ready to file."],
     ["Private by design", "Encrypted end to end. Your client files stay yours."]
   ];
-  var V = [
-    ["/site/assets/np-product.png", "Front"], ["/site/assets/np-view-side.png", "Clip"],
-    ["/site/assets/np-view-wear.png", "Wear it"], ["/site/assets/np-view-dock.png", "Dock"], ["/site/assets/np-view-lapel.png", "Pocket"]
-  ];
+  var V = [["/site/assets/np-product.png", "Front"], ["/site/assets/np-product.png", "Angle"], ["/site/assets/np-product.png", "Detail"]];
   function show(i) {
     el.querySelectorAll(".dm-npx__shot").forEach(function (x, k) { x.classList.toggle("is-on", k === i); });
     el.querySelectorAll(".dm-npx__view").forEach(function (x, k) { x.classList.toggle("is-on", k === i); });
@@ -336,19 +341,29 @@
       '<ul class="dm-npx__stats"><li><b>112</b><span>languages</span></li><li><b>20h</b><span>recording</span></li><li><b>30g</b><span>weight</span></li></ul>' +
       '<a class="dm-npx__btn" href="mailto:hello@digitmask.com?subject=NotePin%20subscription">Subscribe · AED 800 / month</a></div>' +
       '<div class="dm-npx__product"><div class="dm-npx__stage">' + V.map(function (v, i) {
-        return '<img class="dm-npx__shot' + (i ? '' : ' is-on') + '" src="' + v[0] + '" alt="PLAUD NotePin, ' + v[1] + '" width="1024" height="1024"' + (i ? ' loading="lazy"' : '') + '>';
+        return '<img class="dm-npx__shot dm-npx__shot--' + i + (i ? '' : ' is-on') + '" src="' + v[0] + '" alt="PLAUD NotePin, ' + v[1] + '" width="1024" height="1024">';
       }).join("") + '</div><div class="dm-npx__views dm-glass" role="tablist" aria-label="Product views">' + V.map(function (v, i) {
         return '<button type="button" class="dm-npx__view' + (i ? '' : ' is-on') + '" data-v="' + i + '" aria-label="' + v[1] + '"><img src="' + v[0] + '" alt="" width="56" height="56"><span>' + v[1] + '</span></button>';
       }).join("") + '</div></div></header>' +
       '<div class="dm-npx__feats">' + F.map(function (f, i) {
         return '<div class="dm-npx__feat dm-glass dm-npx__feat--' + i + '"><span>0' + (i + 1) + '</span><h3>' + f[0] + '</h3><p>' + f[1] + '</p></div>';
       }).join("") + '</div>' +
-      '<div class="dm-npx__uses">' +
-        '<figure class="dm-npx__use dm-npx__use--a"><img src="/site/assets/np-meeting.jpg" alt="Lawyer meeting a client" loading="lazy"><figcaption class="dm-glass">Client meetings</figcaption></figure>' +
-        '<figure class="dm-npx__use dm-npx__use--b"><img src="/site/assets/np-lawyer.jpg" alt="Lawyer in negotiation" loading="lazy"><figcaption class="dm-glass">Negotiations</figcaption></figure>' +
-        '<figure class="dm-npx__use dm-npx__use--c"><img src="/site/assets/np-desk.jpg" alt="NotePin on a lawyer\'s desk" loading="lazy"><figcaption class="dm-glass">Case preparation</figcaption></figure>' +
-      '</div>' +
-      '<footer class="dm-npx__price dm-glass"><p class="dm-npx__kicker">One simple plan</p><p class="dm-npx__amount">AED 800<small> / month</small></p>' +
+      '<section class="dm-npx__how"><p class="dm-npx__kicker">How it works</p><h2 class="dm-npx__h2">Three steps. Zero typing.</h2><ol>' +
+        '<li class="dm-glass"><b>1</b><h3>Press</h3><p>Squeeze once. A soft buzz tells you it is listening.</p></li>' +
+        '<li class="dm-glass"><b>2</b><h3>Talk</h3><p>Hold the meeting as usual. NotePin catches every voice in the room.</p></li>' +
+        '<li class="dm-glass"><b>3</b><h3>Read</h3><p>Open the app for a clean transcript, summary and action list.</p></li></ol></section>' +
+      '<section class="dm-npx__specs dm-glass"><h2 class="dm-npx__h2">Made for the way lawyers work</h2><dl>' +
+        '<div><dt>Wear it your way</dt><dd>Clip, magnetic pin, wristband or necklace</dd></div>' +
+        '<div><dt>Languages</dt><dd>112, including Arabic and English</dd></div>' +
+        '<div><dt>Battery</dt><dd>A full working day of recording</dd></div>' +
+        '<div><dt>Weight</dt><dd>Lighter than a key</dd></div>' +
+        '<div><dt>Privacy</dt><dd>Encrypted, your files stay yours</dd></div>' +
+        '<div><dt>Support</dt><dd>Set up and support by Digitmask in the UAE</dd></div></dl></section>' +
+      '<section class="dm-npx__faq"><h2 class="dm-npx__h2">Questions</h2>' +
+        '<details class="dm-glass"><summary>Is the device included?</summary><p>Yes. The monthly plan includes the NotePin, the AI service and support.</p></details>' +
+        '<details class="dm-glass"><summary>Does it understand Arabic?</summary><p>Yes, and it can mix Arabic and English in the same meeting.</p></details>' +
+        '<details class="dm-glass"><summary>Can I cancel?</summary><p>Anytime. Just tell us and we collect the device.</p></details></section>' +
+'<footer class="dm-npx__price dm-glass"><p class="dm-npx__kicker">One simple plan</p><p class="dm-npx__amount">AED 800<small> / month</small></p>' +
       '<p class="dm-npx__lead">Device, AI transcription and support included. Cancel anytime.</p>' +
       '<a class="dm-npx__btn" href="/contact/">Talk to us</a></footer>';
     ["wheel", "touchmove", "touchstart", "pointerdown", "mousedown"].forEach(function (ev) {
@@ -382,12 +397,13 @@
     el.classList.remove("is-instant");
     if (!shownAt) shownAt = Date.now();
     var L = document.querySelector(".loader.js-loader"), cs = L && getComputedStyle(L);
+    if (L && entered && +cs.opacity < .6) L.style.visibility = "hidden";
     var ready = !L || cs.visibility === "hidden" || cs.display === "none" || +cs.opacity < .1;
     // Show after the rise finishes, or 4s after Enter whatever the scene is doing.
     // Appear only once the rise above the water has finished (fallback if the scene stalls).
     var H = window.__dmG && window.__dmG.Highway, moving = H && H.running;
     if (moving || !ready) doneAt = 0; else if (!doneAt) doneAt = Date.now();
-    if ((doneAt && Date.now() - doneAt > 350) || Date.now() - shownAt > 20000) el.classList.add("is-visible");
+    if (doneAt || Date.now() - shownAt > 7000) { el.classList.add("is-visible"); if (L && ready) L.style.visibility = "hidden"; }
   }, 200);
 })();
 

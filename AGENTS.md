@@ -17,3 +17,4 @@
 - NotePin (/notepin/) reuses the Projects water scene with the camera flipped upward, plus its own DOM overlay from dm-extras.js; leaving it reads window.__dmFromNp in the scene's out-transitions so the camera descends, and NotePin tiles are kept out of projects.html so they never show on Projects.
 - Interstellar plays only on NotePin and World and ducks all other music (Howler master gain and the extra-track gain) there, so two songs never overlap.
 - Render sharpness is tiered: the scene's starting pixel ratio comes from device strength (window.__dmPR) and dm-extras.js steps it down/up from measured frame rate, so slow phones stay smooth.
+- NotePin's page layer and top bar sit above the site-wide purple colour wash (html::after, mix-blend color), so the product shows in its true colours there; other pages keep the wash.
