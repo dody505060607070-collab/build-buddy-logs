@@ -330,6 +330,6 @@
     var L = document.querySelector(".loader.js-loader"), cs = L && getComputedStyle(L);
     var ready = !L || cs.visibility === "hidden" || cs.display === "none" || +cs.opacity < .1;
     // Show after the rise finishes, or 4s after Enter whatever the scene is doing.
-    if ((ready && Date.now() - shownAt > 1200) || (entered && Date.now() - entered > 4000)) el.classList.add("is-visible");
+    if ((ready && Date.now() - shownAt > 1200) || (entered && Date.now() - entered > 4000) || Date.now() - shownAt > 15000) el.classList.add("is-visible");
   }, 200);
 })();

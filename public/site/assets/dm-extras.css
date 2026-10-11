@@ -118,7 +118,7 @@
 .dm-on-np .js-project-filters, .dm-on-np .dm-rise { visibility: hidden !important; }
 .dm-npx { --np-ink: #160b2e; --np-plum: #3b1550; --np-ember: #ff8a4c; --np-cream: #fff4ea;
   position: fixed; inset: 0; z-index: 50; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
-  background: linear-gradient(180deg, rgba(22,11,46,.88) 0%, rgba(59,21,80,.84) 55%, rgba(120,45,60,.82) 100%);
+  background: linear-gradient(180deg, rgba(22,11,46,.95) 0%, rgba(59,21,80,.93) 55%, rgba(110,40,58,.92) 100%);
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   color: var(--np-cream); font-family: "Neue Montreal", system-ui, sans-serif;
   opacity: 0; visibility: hidden; transition: opacity .9s ease, visibility .9s; padding: 110px 6vw 120px; }
@@ -159,3 +159,5 @@
   .dm-npx__uses { grid-template-columns: 1fr; }
   .dm-npx__use--a { grid-row: auto; } .dm-npx__use--a img { aspect-ratio: 4/3; }
 }
+
+.dm-on-np .header .nav-item, .dm-on-np .header .nav-item__text, .dm-on-np .header__logo { color: #fff4ea !important; }
