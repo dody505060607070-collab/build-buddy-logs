@@ -213,7 +213,7 @@
   function names(np) {
     return (window.projects || []).filter(function (e) {
       var c = e.project.project_grid_category || [];
-      return np ? c.indexOf("experiment") > -1 && /^dm-np-/.test(e.images[0].name) : c.length && c.indexOf("experiment") < 0;
+      return np ? c.indexOf("experiment") > -1 && /^dm-np-/.test(e.images[0].name) : !/^dm-np-/.test(e.images[0].name);
     }).map(function (e) { return e.project.title; });
   }
   function apply(np) {
