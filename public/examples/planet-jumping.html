@@ -150,6 +150,20 @@ body:not(.intro-ready) .header,body:not(.intro-ready) .planet-list,body:not(.int
   .portal-heading{font-size:14px} .portal-heading strong{font-size:16px}
   .menu{height:38px} .portal{border-radius:70px}
 }
+.planet-list{z-index:6}
+.planet-content{pointer-events:none}
+.planet-item{font:inherit;color:#fff;background:transparent;border:0;text-align:left;cursor:pointer!important}
+.planet-item:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.experience.is-last .portal-wrap{opacity:0;pointer-events:none}
+@media(max-width:640px){
+  .planet-list{display:flex;flex-direction:row;left:0;right:0;top:66px;transform:none;gap:2px;padding:0 12px;overflow-x:auto;scrollbar-width:none;font-size:13px}
+  .planet-list::-webkit-scrollbar{display:none}
+  .planet-item{flex:none;margin-left:0;padding:6px 10px;min-height:32px}
+  .planet-item.active{font-size:14px;gap:6px;background:rgba(255,255,255,.16)}
+  .planet-item.active:before{width:10px;height:10px}
+  .planet-item:hover{transform:none}
+  .intro-ready .planet-list{animation:reveal-down .9s cubic-bezier(.22,1,.36,1) .65s both}
+}
 @media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}.portal{transform:none!important}}
 </style>
 <style id="dm-slidein">html{background:#f6f1e7}body{animation:dmSlideIn 1s cubic-bezier(.22,1,.36,1) both}@keyframes dmSlideIn{from{transform:translate3d(30vw,0,0);opacity:0;filter:blur(8px)}to{transform:none;opacity:1;filter:none}}</style></head>
@@ -160,6 +174,11 @@ body:not(.intro-ready) .header,body:not(.intro-ready) .planet-list,body:not(.int
     <video id="mars-background" class="background is-visible" src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/3c83091e-4046-4fd6-adbb-2edb728be79a.mp4" muted playsinline preload="auto"></video>
     <video id="earth-background" class="background" src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/fc3ded42-e845-41f3-a830-5cab512d79cd.mp4" muted playsinline preload="metadata"></video>
     <video id="venus-background" class="background" src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/b30f64d9-1637-477a-83df-d0fc6461a422.mp4" muted playsinline preload="metadata"></video>
+    <img id="mercury-background" class="background" alt="" decoding="async">
+    <img id="jupiter-background" class="background" alt="" decoding="async">
+    <img id="saturn-background" class="background" alt="" decoding="async">
+    <img id="uranus-background" class="background" alt="" decoding="async">
+    <img id="neptune-background" class="background" alt="" decoding="async">
   </div>
   <div class="preloader" id="preloader" aria-label="Loading Mars">
     <video id="preloader-video" src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/5fc5651c-3b5d-4171-b507-87f7e635d1b4.mp4" muted playsinline preload="auto"></video>
@@ -785,5 +804,6 @@ runPreloader();
 })();
 </script>
 <script src="/examples/dm-promo.js" defer></script>
+<script src="/examples/dm-next.js" defer></script>
 </body>
 </html>
