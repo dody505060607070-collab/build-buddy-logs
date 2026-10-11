@@ -529,8 +529,8 @@ tabs[1-activeIdx].setAttribute('aria-selected','false');
 // ---------- THREE SETUP ----------
 let renderer, scene, camera, pmrem, envTex, keyLight, rimLight;
 try{
-  renderer = new THREE.WebGLRenderer({ canvas, alpha:true, antialias:true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer = new THREE.WebGLRenderer({ canvas, alpha:true, antialias:(window.devicePixelRatio||1)<1.5, powerPreference:'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,((navigator.hardwareConcurrency||4)<=4||(navigator.deviceMemory||4)<=4?1:1.5)));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.NeutralToneMapping;
   renderer.toneMappingExposure = 1.05;
@@ -838,12 +838,18 @@ document.addEventListener('keydown', (e)=>{
 
 // ---------- animation loop ----------
 let lastT = performance.now();
+let heroVisible = true, heroRectC = null;
+window.addEventListener('resize', ()=>{ heroRectC = null; }, {passive:true});
+window.addEventListener('scroll', ()=>{ heroRectC = null; }, {passive:true});
+if('IntersectionObserver' in window) new IntersectionObserver(es=>{ heroVisible = es[0].isIntersecting; }).observe(hero);
+const zIn = document.getElementById('btnZoomIn'), zOut = document.getElementById('btnZoomOut');
 function animate(now){
   requestAnimationFrame(animate);
   const dt = Math.min(0.05, (now-lastT)/1000);
   lastT = now;
 
   if(!renderer) return;
+  if(document.hidden || !heroVisible){ lastT = now; return; }
 
   updateFramingTargets();
   const kFast = 1 - Math.exp(-dt*7);
@@ -853,7 +859,8 @@ function animate(now){
   const kZoom = 1 - Math.exp(-dt*6);
   zoom += (targetZoom-zoom)*kZoom;
 
-  const heroRect = hero.getBoundingClientRect();
+  if(!heroRectC) heroRectC = hero.getBoundingClientRect();
+  const heroRect = heroRectC;
   const W = Math.max(1,Math.round(heroRect.width)), H = Math.max(1,Math.round(heroRect.height));
   const fovRad = camera.fov * Math.PI/180;
   camera.position.z = H / (2*Math.tan(fovRad/2) * Math.max(px,1) * Math.max(zoom,0.001));
@@ -912,8 +919,8 @@ function animate(now){
   renderer.toneMappingExposure += (targetLight.exposure - renderer.toneMappingExposure)*kLight;
 
   // rail button states
-  document.getElementById('btnZoomIn').classList.toggle('on', zoom >= 1);
-  document.getElementById('btnZoomOut').classList.toggle('on', zoom < 1);
+  zIn && zIn.classList.toggle('on', zoom >= 1);
+  zOut && zOut.classList.toggle('on', zoom < 1);
 
   renderer.render(scene, camera);
 }
