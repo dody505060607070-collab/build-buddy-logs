@@ -175,3 +175,28 @@
 /* NotePin keeps the same water background as Projects: no coloured sheet on top. */
 .dm-npx { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; text-shadow: 0 2px 18px rgba(0,0,0,.45); }
 .dm-npx__glow { display: none; }
+
+/* NotePin glass panels: frosted see-through cards over the water. */
+.dm-npx .dm-glass { background: linear-gradient(135deg, rgba(255,255,255,.22), rgba(255,255,255,.07)); border: 1px solid rgba(255,255,255,.35); box-shadow: 0 20px 60px rgba(20,8,40,.28), inset 0 1px 0 rgba(255,255,255,.4); backdrop-filter: blur(18px) saturate(150%); border-radius: 28px; text-shadow: 0 1px 10px rgba(20,8,40,.35); }
+.dm-npx .dm-npx__copy { padding: 40px 42px; max-width: 560px; }
+.dm-npx__stats { list-style: none; display: flex; gap: 26px; margin: 22px 0 26px; padding: 0; }
+.dm-npx__stats b { display: block; font-size: 1.8rem; font-weight: 400; }
+.dm-npx__stats span { font-size: .75rem; opacity: .8; text-transform: uppercase; letter-spacing: .08em; }
+.dm-npx .dm-npx__feat { padding: 26px 28px; }
+.dm-npx .dm-npx__price { padding: 46px 40px; max-width: 640px; margin-left: auto; margin-right: auto; text-align: center; }
+.dm-npx figure figcaption.dm-glass { border-radius: 999px; padding: 8px 16px; }
+.dm-npx__product { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.dm-npx__stage { position: relative; width: min(46vw, 560px); aspect-ratio: 1; }
+.dm-npx__shot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transform: scale(.92) rotate(-4deg); transition: opacity .6s ease, transform .9s cubic-bezier(.22,1,.36,1); filter: drop-shadow(0 30px 50px rgba(20,8,40,.45)); animation: dm-np-float 6s ease-in-out infinite; }
+.dm-npx__shot.is-on { opacity: 1; transform: none; }
+@keyframes dm-np-float { 50% { translate: 0 -14px; } }
+.dm-npx .dm-npx__views { display: flex; gap: 8px; padding: 8px; border-radius: 999px; }
+.dm-npx__view { display: flex; align-items: center; gap: 8px; padding: 6px 14px 6px 6px; border: 0; border-radius: 999px; background: transparent; color: inherit; font: inherit; font-size: .8rem; cursor: pointer; transition: background .3s; }
+.dm-npx__view img { width: 36px; height: 36px; object-fit: contain; border-radius: 50%; background: rgba(255,255,255,.18); }
+.dm-npx__view.is-on, .dm-npx__view:hover { background: rgba(255,255,255,.3); }
+@media (max-width: 767px) {
+  .dm-npx .dm-npx__copy { padding: 26px 22px; }
+  .dm-npx__stage { width: 82vw; }
+  .dm-npx__view span { display: none; }
+  .dm-npx__view { padding: 4px; }
+}
