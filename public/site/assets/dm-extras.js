@@ -258,6 +258,37 @@
     if ((isNp(from) && isPr(to)) || (isPr(from) && isNp(to))) { e.preventDefault(); e.stopPropagation(); location.href = to; }
   }, true);
   var pending = null, shownAt = 0;
+  // Filter buttons: we choose the cards ourselves (never the hidden NotePin ones) and retry
+  // until the scene is free, so pressing any filter — or All — always shows its cards.
+  function showFilter(f, tries) {
+    var G = window.__dmG, PM = G && G.ProjectMenu;
+    if (!PM || !PM.projects || !PM.projects.children.length || !window.__dmEmit || PM.animatingFilter) {
+      if ((tries || 0) < 40) setTimeout(function () { showFilter(f, (tries || 0) + 1); }, 120); return;
+    }
+    var list = (window.projects || []).filter(function (e) {
+      var c = e.project.project_grid_category || [];
+      return !/^dm-np-/.test(e.images[0].name) && (f === "all" || c.indexOf(f) > -1);
+    }).map(function (e) { return e.project.title; });
+    if (!list.length) list = names(false);
+    window.__dmEmit("ProjectFilters:change", list);
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest(".js-project-filters\\:filterBtn"); if (!b || !b.dataset.filter) return;
+    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+    document.querySelectorAll(".js-project-filters\\:filterBtn").forEach(function (x) { x.classList.toggle("is-active", x === b); });
+    showFilter(b.dataset.filter);
+  }, true);
+  // Arriving on Projects: make sure All is loaded, checking again a few times in case the scene was busy.
+  var prWas = false;
+  setInterval(function () {
+    var on = isPr(location.pathname);
+    if (on && !prWas) [400, 1500, 3500].forEach(function (t) { setTimeout(function () {
+      if (!isPr(location.pathname)) return;
+      var act = document.querySelector(".js-project-filters\\:filterBtn.is-active");
+      if (!act || act.dataset.filter === "all") showFilter("all");
+    }, t); });
+    prWas = on;
+  }, 250);
   // Every frame: Services tiles only show on Projects, or on Home when not coming from / going to NotePin.
   (function tiles() {
     var p = location.pathname, PMg = window.__dmG && window.__dmG.ProjectMenu && window.__dmG.ProjectMenu.projects;
@@ -461,16 +492,31 @@
 
 /* Examples open inside the site: the water slides away to the left and the example glides in from the right. */
 (function () {
-  var box = null, busy = 0;
+  var box = null, busy = 0, oldTitle = "", fetched = {};
+  var NAMES = { "feather-atlas": "Feather Atlas", "planet-jumping": "Planet Jumping" };
+  function nameOf(u) { var k = u.split("/").pop().replace(/\.html$/, ""); return NAMES[k] || k.replace(/-/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
+  // Warm the example up as soon as a finger or mouse gets near its card, so it opens fast.
+  function warm(u) {
+    u = new URL(u, location.href).pathname; if (fetched[u]) return; fetched[u] = 1;
+    var l = document.createElement("link"); l.rel = "prefetch"; l.href = u; document.head.appendChild(l);
+    if (/feather/.test(u)) ["https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"].forEach(function (h) {
+      var m = document.createElement("link"); m.rel = "modulepreload"; m.href = h; m.crossOrigin = "anonymous"; document.head.appendChild(m);
+    });
+  }
+  ["pointerover", "touchstart", "focusin"].forEach(function (ev) {
+    document.addEventListener(ev, function (e) { var a = e.target.closest && e.target.closest("a[href]"); if (a && isEx(a.href)) warm(a.href); }, { passive: true, capture: true });
+  });
   function isEx(u) { try { return /^\/examples\//.test(new URL(u, location.href).pathname); } catch (e) { return false; } }
   function close() {
     if (!box) return; var b = box; box = null;
     b.classList.remove("is-on"); document.documentElement.classList.remove("dm-siding");
+    if (oldTitle) { document.title = oldTitle; oldTitle = ""; }
     setTimeout(function () { b.remove(); }, 1200);
   }
   function open(url) {
     if (Date.now() - busy < 1300) return; busy = Date.now();
     url = new URL(url, location.href).pathname;
+    if (!oldTitle) oldTitle = document.title; document.title = nameOf(url) + " — Digitmask Example";
     if (box) { // next example: slide the current one away, the next one in
       var old = box.querySelector("iframe"), f = document.createElement("iframe");
       f.src = url; f.title = "Example"; f.className = "dm-ex__f is-next"; box.appendChild(f);

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Planet Jumping</title>
+<title>Planet Jumping — Digitmask Example</title>
 <style>
 @font-face{font-family:'SF Pro';src:local('SF Pro Text');font-weight:400}
 @font-face{font-family:'SF Pro';src:local('SF Pro Text Bold');font-weight:700}
@@ -37,6 +37,14 @@ html,body,button,a,.portal{cursor:none!important}
 .planet-list{left:clamp(18px,1.95vw,28px);top:50%;transform:translateY(-43%);display:flex;flex-direction:column;gap:6px;font-size:16px}
 .planet-item{display:flex;align-items:center;min-height:20px}
 .planet-item.active{font-size:18px;font-weight:700;gap:8px}
+.planet-list{pointer-events:auto}
+.planet-item{padding:3px 10px;margin-left:-10px;border-radius:999px;opacity:.7;transition:opacity .25s,background .25s,transform .25s}
+.planet-item:hover{opacity:1;background:rgba(255,255,255,.18);transform:translateX(6px)}
+.planet-item.active{opacity:1}
+.pj-hint{position:absolute;z-index:5;left:50%;top:calc(50% + min(200px,19vw));transform:translateX(-50%);padding:9px 18px;border-radius:999px;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);backdrop-filter:blur(10px);color:#fff;font-size:14px;white-space:nowrap;
+  pointer-events:none;animation:pj-pulse 2s ease-in-out infinite}
+@keyframes pj-pulse{50%{transform:translateX(-50%) translateY(6px);opacity:.75}}
 .planet-item.active:before{content:'';width:16px;height:16px;border-radius:50%;background:#fff}
 
 .portal-wrap{left:50%;top:50%;width:min(320px,31vw);transform:translate(-50%,-54%);perspective:none}
@@ -193,6 +201,7 @@ body:not(.intro-ready) .header,body:not(.intro-ready) .planet-list,body:not(.int
   </section>
 
   <div class="transition-layer" aria-hidden="true"><video id="transition-video" muted playsinline preload="auto"></video></div>
+  <div class="pj-hint chrome" id="pj-hint">Click the portal or scroll ↓ to travel</div>
   <div class="loading" aria-hidden="true">Preparing orbit…</div>
   <div class="custom-cursor" aria-hidden="true">
     <span class="cursor-orbit"></span><span class="cursor-dot"></span><span class="cursor-label">Enter</span>
@@ -409,9 +418,10 @@ function revealPlanetContent(){
 }
 
 // ===== Portal canvas =====
-var dpr = Math.min(window.devicePixelRatio||1, ((navigator.hardwareConcurrency||4)<=4||(navigator.deviceMemory||4)<=4?1:1.5));
+function pickDpr(){ return Math.min(window.devicePixelRatio||1, (matchMedia('(pointer:coarse)').matches||(navigator.hardwareConcurrency||4)<=4||(navigator.deviceMemory||4)<=4)?1:1.25); }
+var dpr = pickDpr(); var portalRect = null;
 function resizeCanvas(){
-  dpr = Math.min(window.devicePixelRatio||1, ((navigator.hardwareConcurrency||4)<=4||(navigator.deviceMemory||4)<=4?1:1.5));
+  dpr = pickDpr(); portalRect = null;
   [portalCanvas, sceneCanvas].forEach(function(c){
     c.width = window.innerWidth*dpr;
     c.height = window.innerHeight*dpr;
@@ -487,6 +497,9 @@ function buildRoundRectPoints(w, h, r){
 function draw(ts){
   if(document.hidden){ lastTime=null; requestAnimationFrame(draw); return; }
   if(lastTime === null) lastTime = ts;
+  // Calm moments only need ~30 frames a second; travel runs at full speed.
+  var idle = !transitionActive && !busy && maskScale >= 1 && Math.abs(targetX-rotX)+Math.abs(targetY-rotY) < .05;
+  if(idle && ts-lastTime < 32){ requestAnimationFrame(draw); return; }
   var dt = Math.min(40, ts-lastTime);
   lastTime = ts;
 
@@ -501,7 +514,8 @@ function draw(ts){
     drawShade(portalCtx);
   }
 
-  var rect = portalBtn.getBoundingClientRect();
+  if(!portalRect || busy) portalRect = portalBtn.getBoundingClientRect();
+  var rect = portalRect;
   var e = expansion;
   var rectCx = rect.left + rect.width/2;
   var rectCy = rect.top + rect.height/2;
@@ -645,6 +659,13 @@ function travel(){
 }
 
 portalBtn.addEventListener('click', travel);
+var hintEl = document.getElementById('pj-hint'), wheelAt = 0, touchY = null;
+function updateHint(){ hintEl.textContent = current === 'venus' ? 'Final stop — thanks for travelling' : 'Click the portal or scroll ↓ to travel'; }
+var _render = render; render = function(){ _render(); updateHint(); };
+window.addEventListener('wheel', function(e){ if(e.deltaY > 20 && Date.now()-wheelAt > 1500){ wheelAt = Date.now(); travel(); } }, {passive:true});
+window.addEventListener('touchstart', function(e){ touchY = e.touches[0].clientY; }, {passive:true});
+window.addEventListener('touchend', function(e){ if(touchY !== null && touchY - e.changedTouches[0].clientY > 50) travel(); touchY = null; }, {passive:true});
+document.querySelectorAll('.planet-list').forEach(function(l){ l.addEventListener('pointerover', function(){ cursor.classList.add('is-enter'); cursor.querySelector('.cursor-label').textContent=''; }); l.addEventListener('pointerout', function(){ cursor.classList.remove('is-enter'); cursor.querySelector('.cursor-label').textContent='Enter'; }); });
 
 // ===== Boot =====
 document.querySelectorAll('.background').forEach(function(v){
@@ -658,5 +679,6 @@ runPreloader();
 
 })();
 </script>
+<script src="/examples/dm-promo.js" defer></script>
 </body>
 </html>
