@@ -373,7 +373,7 @@ function mediaReady(media){
 
 function startExperience(){
   var state = states[current];
-  var media = state.image ? portalImage : portalVideo;
+  var media = showPortalImage ? portalImage : portalVideo;
   mediaReady(media).then(function(){
     return revealMask();
   }).then(function(){
@@ -433,10 +433,11 @@ function resizeCanvas(){
 }
 window.addEventListener('resize', resizeCanvas);
 
-function drawCover(ctx, media){
+function drawCover(ctx, media, zoom){
+  if(!media) return;
   var mw = media.videoWidth || media.naturalWidth || 1;
   var mh = media.videoHeight || media.naturalHeight || 1;
-  var scale = Math.max(window.innerWidth/mw, window.innerHeight/mh);
+  var scale = Math.max(window.innerWidth/mw, window.innerHeight/mh) * (zoom || 1);
   var w = mw*scale, h = mh*scale;
   var x = (window.innerWidth-w)/2, y = (window.innerHeight-h)/2;
   try { ctx.drawImage(media, x, y, w, h); } catch(e){}
@@ -464,6 +465,7 @@ window.addEventListener('pointerleave', function(){ targetX = 0; targetY = 0; })
 var expansion = 0;
 var canvasOpacity = 1;
 var transitionActive = false;
+var transitionMedia = null;
 var frozenScene = false;
 var lastTime = null;
 
@@ -528,7 +530,7 @@ function draw(ts){
   var r = 90*(1-e)*scale;
   var rx = rotX*(1-e), ry = rotY*(1-e);
 
-  if(w > 1 && h > 1){
+  if(w > 1 && h > 1 && (transitionActive || states[current].nextKey)){
     var pts = buildRoundRectPoints(w, h, r);
     portalCtx.save();
     portalCtx.globalAlpha = canvasOpacity;
@@ -542,8 +544,8 @@ function draw(ts){
     portalCtx.clip();
     portalCtx.fillStyle = '#030303';
     portalCtx.fillRect(0,0,window.innerWidth,window.innerHeight);
-    var media = transitionActive ? transitionVideo : (states[current].image ? portalImage : portalVideo);
-    drawCover(portalCtx, media);
+    var media = transitionActive ? transitionMedia : (showPortalImage ? portalImage : portalVideo);
+    drawCover(portalCtx, media, transitionActive && media.tagName === 'IMG' ? 1.35 - .35*e : 1);
     if(transitionActive) drawShade(portalCtx);
     portalCtx.restore();
   }
@@ -597,35 +599,63 @@ function waitEvent(el, evt, timeout){
   });
 }
 
-function travel(){
-  if(busy || current === 'venus') return;
+var imgCache = {};
+function getImg(src){
+  if(!imgCache[src]){ var im = new Image(); im.decoding = 'async'; im.src = src; imgCache[src] = im; }
+  return imgCache[src];
+}
+function imgReady(im, timeout){
+  return new Promise(function(resolve){
+    if(im.complete && im.naturalWidth) return resolve();
+    var t = setTimeout(resolve, timeout||4000);
+    im.addEventListener('load', function(){ clearTimeout(t); resolve(); }, {once:true});
+    im.addEventListener('error', function(){ clearTimeout(t); resolve(); }, {once:true});
+  });
+}
+function delay(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+// Travel to any planet: forward, back, or straight to one picked from the list.
+function travel(to){
+  if(busy) return;
+  var idx = order.indexOf(current);
+  if(to === undefined) to = order[idx+1];
+  if(!to || to === current || !states[to]) return;
   busy = true;
   targetX = 0; targetY = 0;
-  var prevState = states[current];
-  var next = current === 'mars' ? 'earth' : 'venus';
-
-  transitionVideo.src = prevState.portal;
-  transitionVideo.load();
+  var tgt = states[to];
+  var bgEl = document.getElementById(tgt.background);
+  if(bgEl && bgEl.tagName === 'IMG' && !bgEl.getAttribute('src')) bgEl.src = tgt.image;
+  var ready;
+  if(tgt.clip){
+    transitionVideo.src = tgt.clip;
+    transitionVideo.load();
+    transitionMedia = transitionVideo;
+    ready = waitEvent(transitionVideo, 'canplaythrough', 2500);
+  } else {
+    transitionMedia = getImg(tgt.image);
+    ready = imgReady(transitionMedia, 4000);
+  }
   experience.classList.add('is-loading');
 
-  waitEvent(transitionVideo, 'canplaythrough', 1600).then(function(){
+  ready.then(function(){
     experience.classList.remove('is-loading','content-revealing','mask-revealing');
     experience.classList.add('is-transitioning');
-    transitionVideo.currentTime = 0;
-    transitionVideo.playbackRate = 1.3;
     canvasOpacity = 1;
     transitionActive = true;
+    if(!tgt.clip) return;
+    transitionVideo.currentTime = 0;
+    transitionVideo.playbackRate = 1.3;
     var p = transitionVideo.play();
     return (p && p.catch ? p.catch(function(){}) : Promise.resolve());
   }).then(function(){
     return animateValue(function(v){ expansion = v; }, 1100);
   }).then(function(){
-    return waitEvent(transitionVideo, 'ended', 4000);
+    return tgt.clip ? waitEvent(transitionVideo, 'ended', 4000) : delay(220);
   }).then(function(){
     sceneCtx.clearRect(0,0,window.innerWidth,window.innerHeight);
-    drawCover(sceneCtx, transitionVideo);
+    drawCover(sceneCtx, transitionMedia, 1);
     frozenScene = true;
-    current = next;
+    current = to;
     experience.classList.add('is-committing');
     render();
     return new Promise(function(resolve){
@@ -643,9 +673,9 @@ function travel(){
     return maskReveal;
   }).then(function(){
     setTimeout(function(){
-      transitionVideo.removeAttribute('src');
-      transitionVideo.load();
+      if(tgt.clip){ transitionVideo.removeAttribute('src'); transitionVideo.load(); }
       busy = false;
+      warmNext();
     }, 450);
   }).catch(function(){
     transitionActive = false;
@@ -657,15 +687,45 @@ function travel(){
     busy = false;
   });
 }
+function back(){ var i = order.indexOf(current); if(i > 0) travel(order[i-1]); }
+// Fetch the next planet's picture early so travelling there starts at once.
+function warmNext(){
+  var n = states[order[order.indexOf(current)+1]];
+  if(n && n.image) getImg(n.image);
+}
 
-portalBtn.addEventListener('click', travel);
+portalBtn.addEventListener('click', function(){ travel(); });
+planetList.addEventListener('click', function(e){
+  var b = e.target.closest && e.target.closest('.planet-item');
+  if(b && b.dataset.key) travel(b.dataset.key);
+});
 var hintEl = document.getElementById('pj-hint'), wheelAt = 0, touchY = null;
-function updateHint(){ hintEl.textContent = current === 'venus' ? 'Final stop — thanks for travelling' : 'Click the portal or scroll ↓ to travel'; }
+function updateHint(){
+  hintEl.textContent = current === 'neptune' ? 'Last planet — keep scrolling ↓ for the other example' :
+    (current === 'mars' ? 'Click the portal or scroll ↓ to travel' : 'Scroll ↓ to travel on · scroll ↑ to go back');
+}
 var _render = render; render = function(){ _render(); updateHint(); };
-window.addEventListener('wheel', function(e){ if(e.deltaY > 20 && Date.now()-wheelAt > 1500){ wheelAt = Date.now(); travel(); } }, {passive:true});
+window.dmAtEnd = function(){ return current === 'neptune' && !busy; };
+window.addEventListener('wheel', function(e){
+  if(Math.abs(e.deltaY) < 20 || Date.now()-wheelAt < 1500 || busy) return;
+  if(e.deltaY > 0 && current === 'neptune') return;
+  wheelAt = Date.now();
+  if(e.deltaY > 0) travel(); else back();
+}, {passive:true});
 window.addEventListener('touchstart', function(e){ touchY = e.touches[0].clientY; }, {passive:true});
-window.addEventListener('touchend', function(e){ if(touchY !== null && touchY - e.changedTouches[0].clientY > 50) travel(); touchY = null; }, {passive:true});
-document.querySelectorAll('.planet-list').forEach(function(l){ l.addEventListener('pointerover', function(){ cursor.classList.add('is-enter'); cursor.querySelector('.cursor-label').textContent=''; }); l.addEventListener('pointerout', function(){ cursor.classList.remove('is-enter'); cursor.querySelector('.cursor-label').textContent='Enter'; }); });
+window.addEventListener('touchend', function(e){
+  if(touchY === null) return;
+  var d = touchY - e.changedTouches[0].clientY; touchY = null;
+  if(e.target.closest && e.target.closest('.planet-list,.dmn,.dmp,.back-link')) return;
+  if(d > 50 && current !== 'neptune') travel(); else if(d < -50) back();
+}, {passive:true});
+window.addEventListener('keydown', function(e){
+  if(e.key === 'ArrowDown' && current !== 'neptune') travel();
+  if(e.key === 'ArrowUp') back();
+});
+// Over the planet list the normal pointer shows, so it's clear the names can be clicked.
+planetList.addEventListener('pointerover', function(){ cursor.style.opacity = '0'; });
+planetList.addEventListener('pointerout', function(){ cursor.style.opacity = ''; });
 
 // ===== Boot =====
 document.querySelectorAll('.background').forEach(function(v){
