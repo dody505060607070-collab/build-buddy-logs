@@ -30,7 +30,7 @@ export default function PinModel() {
     const group = new THREE.Group();
     const body = new THREE.Mesh(
       new THREE.CapsuleGeometry(0.9, 1.9, 24, 64),
-      new THREE.MeshPhysicalMaterial({ color: 0x3a3b40, metalness: 0.85, roughness: 0.32, clearcoat: 0.6, clearcoatRoughness: 0.25 }),
+      new THREE.MeshPhysicalMaterial({ color: 0x8a8c92, metalness: 0.7, roughness: 0.38, clearcoat: 0.6, clearcoatRoughness: 0.25 }),
     );
     body.scale.z = 0.42;
     group.add(body);
@@ -46,6 +46,9 @@ export default function PinModel() {
     group.add(led);
     group.rotation.set(0.15, -0.5, -0.18);
     scene.add(group);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const key = new THREE.DirectionalLight(0xffd2a0, 2.2); key.position.set(4, 5, 6); scene.add(key);
+    const rim = new THREE.DirectionalLight(0xa880ff, 2.4); rim.position.set(-5, -1, -2); scene.add(rim);
 
     const size = () => {
       const w = el.clientWidth, h = el.clientHeight;
