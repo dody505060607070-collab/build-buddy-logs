@@ -18,3 +18,4 @@
 - Interstellar plays only on NotePin and World and ducks all other music (Howler master gain and the extra-track gain) there, so two songs never overlap.
 - Render sharpness is tiered: the scene's starting pixel ratio comes from device strength (window.__dmPR) and dm-extras.js steps it down/up from measured frame rate, so slow phones stay smooth.
 - NotePin's page layer and top bar sit above the site-wide purple colour wash (html::after, mix-blend color), so the product shows in its true colours there; other pages keep the wash.
+- Examples (public/examples/*.html) are standalone pages opened inside the site in a sliding iframe layer from dm-extras.js, so their heavy 3D code never loads on Home and they stay separate from the water scene.
