@@ -219,6 +219,12 @@
   function apply(np) {
     var G = window.__dmG, PM = G && G.ProjectMenu;
     if (!PM || !PM.projects || !PM.projects.children.length || !window.__dmEmit) return false;
+    // Wait for any running card animation, otherwise the two clash and cards stay missing.
+    if (PM.animatingFilter) return false;
+    // Keep the filter buttons in step with the cards: "All" is the active one.
+    if (!np) document.querySelectorAll(".js-project-filters\\:filterBtn").forEach(function (b) {
+      b.classList.toggle("is-active", b.dataset.filter === "all");
+    });
     window.__dmEmit("ProjectFilters:change", names(np)); return true;
   }
   function make() {
