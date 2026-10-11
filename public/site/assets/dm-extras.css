@@ -245,3 +245,6 @@
 .dm-npx .dm-glass, .dm-npx .dm-glass * { -webkit-text-stroke: 0; -webkit-text-fill-color: currentColor; background-clip: border-box; -webkit-background-clip: border-box; }
 .dm-npx .dm-glass * { background-clip: initial; }
 .dm-npx__title { color: #fff !important; }
+
+/* NotePin lives only at /notepin/: on every other page its layer is fully removed. */
+html:not(.dm-on-np) .dm-npx { display: none !important; }
