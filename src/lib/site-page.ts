@@ -2,9 +2,10 @@ import home from "./site-pages/home.html?raw";
 import contact from "./site-pages/contact.html?raw";
 import projects from "./site-pages/projects.html?raw";
 import world from "./site-pages/world.html?raw";
+import notepin from "./site-pages/notepin.html?raw";
 import assetMap from "./site-asset-map.json";
 
-const pages = { home, contact, projects, world } as const;
+const pages = { home, contact, projects, world, notepin } as const;
 
 // Serves the exported site's original HTML at its original address, because the
 // site's scripts choose the 3D scene from the current address.
