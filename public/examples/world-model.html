@@ -202,7 +202,8 @@
     to{opacity:1; filter:blur(0);}
   }
 
-  .controller.collapsed .track{opacity:0; transition: opacity 400ms linear 650ms;}
+  .controller.collapsed .track{left:calc(50% - 96px); width:192px; opacity:0; transition: left 980ms var(--retake-slow-ease), width 980ms var(--retake-slow-ease), opacity 400ms linear 650ms;}
+  .controller.collapsed .capsule{transition: left 980ms var(--retake-slow-ease), width 980ms var(--retake-slow-ease), background 980ms var(--retake-slow-ease);}
   .controller.collapsed .capsule{
     --cap-left: calc(50% - 100px);
     --cap-width: 200px;
@@ -327,7 +328,7 @@
     <p class="sub" id="sub">Digitmask builds open world models that give you full control, from production-grade video to systems that understand and operate in the physical world.</p>
   </div>
 
-  <div class="controller glass" id="controller" role="group" aria-label="Scene state controller">
+  <div class="controller" id="controller" role="group" aria-label="Scene state controller">
     <div class="track glass" id="track"></div>
     <div class="capsule glass" id="capsule"></div>
     <div class="cells" id="cells">
@@ -581,22 +582,17 @@
   function showTitle(){ stage.classList.remove('title-hidden'); }
 
   function moveLabelToCapsule(chosenBtn){
-    var capRect = capsuleTargetRect();
+    // Measure against where the capsule ends up (its centre), not where it is mid-animation.
+    controller.classList.add('collapsed');
+    var c = controller.getBoundingClientRect();
+    var mobile = window.matchMedia('(max-width:700px)').matches;
+    var capCenterX = c.left + c.width/2;
+    var capCenterY = mobile ? c.top + window.innerHeight*0.04 : c.top + 35;
     var btnRect = chosenBtn.getBoundingClientRect();
-    var capCenterX = capRect.left + capRect.width/2;
-    var capCenterY = capRect.top + capRect.height/2;
-    var btnCenterX = btnRect.left + btnRect.width/2;
-    var btnCenterY = btnRect.top + btnRect.height/2;
-    var dx = capCenterX - btnCenterX;
-    var dy = capCenterY - btnCenterY;
+    var dx = capCenterX - (btnRect.left + btnRect.width/2);
+    var dy = capCenterY - (btnRect.top + btnRect.height/2);
     chosenBtn.style.transition = 'transform 980ms var(--retake-slow-ease)';
     chosenBtn.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
-  }
-  function capsuleTargetRect(){
-    var capsule = document.getElementById('capsule');
-    controller.classList.add('collapsed');
-    var r = capsule.getBoundingClientRect();
-    return r;
   }
   function resetLabelTransform(btn){
     btn.style.transition = '';
