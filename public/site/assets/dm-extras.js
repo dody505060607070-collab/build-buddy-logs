@@ -232,7 +232,7 @@
     if (p !== last) { last = p; pending = isNp(p) ? true : isPr(p) ? false : null; }
     if (pending !== null && apply(pending)) pending = null;
     var L = document.querySelector(".loader.js-loader"), cs = L && getComputedStyle(L);
-    var show = p === "/" && (!L || cs.visibility === "hidden" || cs.display === "none");
+    var show = p === "/" && (!L || cs.visibility === "hidden" || cs.display === "none" || +cs.opacity < .1);
     if (show && !shownAt) shownAt = Date.now(); if (!show) shownAt = 0;
     btn.classList.toggle("is-visible", show && Date.now() - shownAt > 1500);
   }, 250);
