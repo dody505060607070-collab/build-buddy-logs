@@ -254,12 +254,22 @@
   });
   ["wheel", "touchmove"].forEach(function (n) { document.addEventListener(n, function (e) { if (panel && panel.contains(e.target)) e.stopPropagation(); }, { capture: true, passive: true }); });
   var shownAt = 0;
+  function loaderUp() {
+    var bs = document.querySelectorAll(".js-enter-no-audio-btn, .js-enter-btn, .js-loader, .loader");
+    for (var i = 0; i < bs.length; i++) {
+      var r = bs[i].getBoundingClientRect(); if (!r.width || !r.height) continue;
+      var cs = getComputedStyle(bs[i]); if (cs.visibility === "hidden" || +cs.opacity === 0) continue;
+      var el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      if (el && (el === bs[i] || bs[i].contains(el))) return true;
+    }
+    return false;
+  }
   setInterval(function () {
     if (!tag) build();
-    var loading = document.documentElement.classList.contains("is-loading") || document.body.classList.contains("is-loading");
-    if (inWorld()) { if (!shownAt) shownAt = Date.now(); }
+    var loading = loaderUp();
+    if (inWorld() && !loading) { if (!shownAt) shownAt = Date.now(); }
     else shownAt = 0;
-    var show = inWorld() && (!loading || Date.now() - shownAt > 8000) && Date.now() - shownAt > 2500;
+    var show = inWorld() && !loading && Date.now() - shownAt > 2500;
     tag.classList.toggle("is-visible", show);
     if (!inWorld() && panel) closePanel();
   }, 300);
