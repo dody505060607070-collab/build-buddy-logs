@@ -213,11 +213,17 @@
     btn.href = "/notepin/"; btn.className = "dm-rise"; btn.setAttribute("aria-label", "Rise up to PLAUD NotePin");
     btn.innerHTML = '<span class="dm-rise__arrow">↑</span><span>PLAUD NotePin</span>';
     document.body.appendChild(btn);
-    btn.addEventListener("click", function (e) {
-      e.preventDefault(); e.stopPropagation();
+    var go = function (e) {
+      e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+      if (go.busy) return; go.busy = true; setTimeout(function () { go.busy = false; }, 1500);
       var H = window.__dmG && window.__dmG.Highway;
-      if (H && H.redirect) H.redirect(location.origin + "/notepin/"); else location.href = "/notepin/";
-    });
+      try { if (H && H.redirect) H.redirect(location.origin + "/notepin/"); else location.href = "/notepin/"; }
+      catch (er) { location.href = "/notepin/"; }
+      // If the scene ignores the request, open the page anyway.
+      setTimeout(function () { if (!isNp(location.pathname)) location.href = "/notepin/"; }, 2500);
+    };
+    btn.addEventListener("click", go, true);
+    btn.addEventListener("pointerdown", function (e) { e.stopPropagation(); }, true);
   }
   // Projects <-> NotePin share one scene: switch with a normal page load.
   document.addEventListener("click", function (e) {
@@ -232,8 +238,37 @@
     if (p !== last) { last = p; pending = isNp(p) ? true : isPr(p) ? false : null; }
     if (pending !== null && apply(pending)) pending = null;
     var L = document.querySelector(".loader.js-loader"), cs = L && getComputedStyle(L);
-    var show = p === "/" && (!L || cs.visibility === "hidden" || cs.display === "none" || +cs.opacity < .1);
+    var M = document.querySelector(".js-menu"), mOpen = M && M.classList.contains("is-open");
+    var show = !mOpen && p === "/" && (!L || cs.visibility === "hidden" || cs.display === "none" || +cs.opacity < .1);
     if (show && !shownAt) shownAt = Date.now(); if (!show) shownAt = 0;
     btn.classList.toggle("is-visible", show && Date.now() - shownAt > 1500);
   }, 250);
+})();
+
+/* Interstellar: plays from 2:10 (file is pre-trimmed) and loops. Quiet on Home,
+   full on NotePin and World, fades out elsewhere. Respects the music panel's mute. */
+(function () {
+  var a = new Audio("/site/assets/track-interstellar.mp3?v=1");
+  a.loop = true; a.preload = "auto"; a.volume = 0;
+  var started = false, vol = 0;
+  function target() {
+    if (document.hidden || window.__dmMusicMuted) return 0;
+    var p = location.pathname;
+    if (/^\/(notepin|world)/.test(p)) return 0.55;
+    if (p === "/" || p === "") return 0.12;
+    return 0;
+  }
+  function kick() {
+    if (started) return; started = true;
+    a.play().catch(function () { started = false; });
+  }
+  ["click", "touchend", "keydown"].forEach(function (ev) { document.addEventListener(ev, kick, true); });
+  a.addEventListener("ended", function () { a.currentTime = 0; a.play().catch(function () {}); });
+  setInterval(function () {
+    var t = target();
+    vol += (t - vol) * 0.08; if (Math.abs(t - vol) < 0.003) vol = t;
+    a.volume = Math.max(0, Math.min(1, vol));
+    if (started && a.paused && vol > 0.01 && !document.hidden) a.play().catch(function () {});
+    if (vol === 0 && t === 0 && !a.paused && document.hidden) a.pause();
+  }, 50);
 })();
