@@ -239,7 +239,7 @@
     btn.addEventListener("pointerdown", function (e) { e.stopPropagation(); }, true);
   }
   document.addEventListener("click", function (e) {
-    var a = e.target.closest && e.target.closest("a[href], .dm-rise, .dm-nav-np"); if (!a) return;
+    if (!e.isTrusted) return; var a = e.target.closest && e.target.closest("a[href], .dm-rise, .dm-nav-np"); if (!a || a.closest(".dm-music, .dm-sheet")) return;
     if (a.closest(".dm-npx") && !/^\/(contact|projects|world)?\/?$/.test(new URL(a.href || location.href, location.href).pathname) && !a.classList.contains("dm-nav-np")) return;
     var H = window.__dmG && window.__dmG.Highway, now = Date.now();
     if ((H && H.running) || now - (window.__dmNavAt || 0) < 2200) { e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); return; }
