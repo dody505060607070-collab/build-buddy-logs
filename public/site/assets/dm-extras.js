@@ -255,7 +255,8 @@
   // Every frame: Services tiles only show on Projects, or on Home when not coming from / going to NotePin.
   (function tiles() {
     var p = location.pathname, PMg = window.__dmG && window.__dmG.ProjectMenu && window.__dmG.ProjectMenu.projects;
-    if (PMg && "visible" in PMg) PMg.visible = isPr(p) || (!isNp(p) && !window.__dmFromNp && !(window.__dmGoingNp && Date.now() - window.__dmGoingNp < 7000));
+    var want = isPr(p) || (!isNp(p) && !window.__dmFromNp && !(window.__dmGoingNp && Date.now() - window.__dmGoingNp < 7000));
+    if (PMg && "visible" in PMg && PMg.visible !== want) PMg.visible = want;
     requestAnimationFrame(tiles);
   })();
   setInterval(function () {
@@ -446,4 +447,26 @@
     else if (fps > 58 && pr < cap - 0.01 && steps < 6) { setPR(Math.min(cap, pr + 0.25)); steps++; }
   }
   requestAnimationFrame(tick);
+})();
+
+/* Examples open with a sideways slide, like moving through the water to the side. */
+(function () {
+  var going = false;
+  function slide(url) {
+    if (going) return; going = true;
+    var o = document.createElement("div"); o.className = "dm-side";
+    document.body.appendChild(o); document.documentElement.classList.add("dm-siding");
+    requestAnimationFrame(function () { o.classList.add("is-on"); });
+    setTimeout(function () { location.href = url; }, 1100);
+  }
+  function isEx(u) { try { return /^\/examples\//.test(new URL(u, location.href).pathname); } catch (e) { return false; } }
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest("a[href]");
+    if (a && isEx(a.href)) { e.preventDefault(); e.stopPropagation(); slide(a.href); }
+  }, true);
+  ["pushState", "replaceState"].forEach(function (k) {
+    var f = history[k];
+    history[k] = function (st, t, u) { if (u && isEx(u)) { slide(new URL(u, location.href).href); return; } return f.apply(this, arguments); };
+  });
+  window.addEventListener("pageshow", function () { going = false; var o = document.querySelector(".dm-side"); if (o) o.remove(); document.documentElement.classList.remove("dm-siding"); });
 })();
