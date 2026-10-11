@@ -258,7 +258,7 @@
   var a = new Audio();
   a.loop = true; a.preload = "none"; a.volume = 0;
   var SRC = "/site/assets/track-interstellar.mp3?v=1";
-  var unlocked = false, vol = 0, ducked = false;
+  var unlocked = false, vol = 0, ducked = false, duckAt = 0;
   function here() { return /^\/(notepin|world)(\/|$)/.test(location.pathname); }
   function target() {
     if (document.hidden || window.__dmMusicMuted || !here()) return 0;
@@ -272,7 +272,8 @@
   ["click", "touchend", "keydown"].forEach(function (ev) { document.addEventListener(ev, unlock, true); });
   function duck(on) {
     var H = window.__dmHowler; if (!H || !H.masterGain || !H.ctx) return;
-    if (on === ducked) return; ducked = on;
+    if (on === ducked && !(on && H.masterGain.gain.value > 0.05 && Date.now() - duckAt > 1500)) return;
+    ducked = on; duckAt = Date.now();
     try {
       var g = H.masterGain.gain, t = H.ctx.currentTime;
       g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
