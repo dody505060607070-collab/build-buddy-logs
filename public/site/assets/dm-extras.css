@@ -248,3 +248,9 @@
 
 /* NotePin lives only at /notepin/: on every other page its layer is fully removed. */
 html:not(.dm-on-np) .dm-npx { display: none !important; }
+
+/* Sideways slide into an Example */
+.dm-side { position: fixed; inset: 0; z-index: 2147483600; pointer-events: none; transform: translate3d(100%,0,0);
+  background: linear-gradient(90deg, rgba(255,255,255,0), rgba(246,241,231,.9) 18%, #f6f1e7 40%); transition: transform 1.1s cubic-bezier(.76,0,.24,1); }
+.dm-side.is-on { transform: translate3d(-40%,0,0); }
+.dm-siding canvas { transition: transform 1.1s cubic-bezier(.76,0,.24,1), filter 1.1s; transform: translate3d(-18vw,0,0) scale(1.05); filter: blur(6px); }
