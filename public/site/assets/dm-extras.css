@@ -237,3 +237,11 @@
   .dm-npx__how ol, .dm-npx__specs dl { grid-template-columns: 1fr; }
   .dm-npx__specs { padding: 28px 22px; }
 }
+/* The site-wide purple colour wash (html::after) must not tint NotePin: lift the page and the top bar above it. */
+.dm-npx { z-index: 2147483001; }
+.dm-on-np .header, .dm-on-np .js-header { position: relative; z-index: 2147483002; }
+.dm-on-np .js-menu, .dm-on-np .dm-music, .dm-on-np .dm-sheet { z-index: 2147483003; }
+/* Panels are real glass, not the outlined-letter title style. */
+.dm-npx .dm-glass, .dm-npx .dm-glass * { -webkit-text-stroke: 0; -webkit-text-fill-color: currentColor; background-clip: border-box; -webkit-background-clip: border-box; }
+.dm-npx .dm-glass * { background-clip: initial; }
+.dm-npx__title { color: #fff !important; }
