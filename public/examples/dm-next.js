@@ -27,7 +27,9 @@
     ".dmn__a{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(255,255,255,.4);animation:dmn-bob 1.6s ease-in-out infinite}" +
     ".dmn:hover .dmn__a{background:rgba(255,255,255,.18)}" +
     "@keyframes dmn-bob{50%{transform:translateY(4px)}}" +
-    "@media(max-width:640px){.dmn{bottom:68px;width:min(340px,calc(100vw - 24px));padding:8px 12px}.dmn__t b{font-size:14px}}";
+    ".dmn.is-mini{width:auto;padding:6px 8px 6px 16px;gap:10px;border-radius:999px;bottom:12px}.dmn.is-mini .dmn__t small,.dmn.is-mini .dmn__bar{display:none}" +
+    ".dmn.is-mini .dmn__t b{font-size:13px;font-weight:500}.dmn.is-mini .dmn__t b:before{content:\"Other example: \";opacity:.75}.dmn.is-mini .dmn__a{width:26px;height:26px}" +
+    "@media(max-width:640px){.dmn.is-mini{bottom:64px}.dmn{bottom:68px;width:min(340px,calc(100vw - 24px));padding:8px 12px}.dmn__t b{font-size:14px}}";
   var el, bar, p = 0, shown = false, gone = false, idleT = 0;
   function atEnd() {
     if (typeof window.dmAtEnd === "function") return !!window.dmAtEnd();
@@ -43,13 +45,13 @@
   function set(v) { p = Math.max(0, Math.min(1, v)); if (bar) bar.style.transform = "scaleX(" + p + ")"; }
   function push(d) {
     if (!atEnd()) { set(0); return; }
-    set(p + d); if (p >= 1) go();
-    clearTimeout(idleT); idleT = setTimeout(function relax() { if (p > 0 && !gone) { set(p - .04); idleT = setTimeout(relax, 30); } }, 900);
+    el.classList.remove("is-mini"); set(p + d); if (p >= 1) go();
+    clearTimeout(idleT); idleT = setTimeout(function relax() { if (p > 0 && !gone) { set(p - .04); idleT = setTimeout(relax, 30); } else if (!gone) el.classList.add("is-mini"); }, 900);
   }
   function check() { var want = atEnd(); if (want !== shown) { shown = want; el.classList.toggle("is-on", want); if (!want) set(0); } }
   function add() {
     var s = document.createElement("style"); s.textContent = css; document.head.appendChild(s);
-    el = document.createElement("button"); el.type = "button"; el.className = "dmn";
+    el = document.createElement("button"); el.type = "button"; el.className = "dmn is-mini";
     el.setAttribute("aria-label", "Go to the other example: " + nx[1]);
     el.innerHTML = '<span class="dmn__t"><small>Other example · keep scrolling ↓</small><b>' + nx[1] + '</b><span class="dmn__bar"><i></i></span></span><span class="dmn__a" aria-hidden="true">↓</span>';
     bar = el.querySelector("i");
