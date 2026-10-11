@@ -1,0 +1,66 @@
+@font-face { font-family: "Saol Display"; src: url(/site/assets/SaolDisplay-Light-v1ip50.woff2) format("woff2"); font-weight: 300; }
+@font-face { font-family: "Saol Display"; src: url(/site/assets/SaolDisplay-LightItalic-4dcl74.woff2) format("woff2"); font-weight: 300; font-style: italic; }
+@font-face { font-family: "Neue Montreal"; src: url(/site/assets/NeueMontreal-Regular-1wo09em.woff2) format("woff2"); }
+
+.np { --ink: #f5efe6; --sun: #f0a35e; --vio: #9b6bff; --bg: #0b0812; min-height: 100vh; background: radial-gradient(120% 70% at 70% 0%, #2a1840 0%, #140c20 45%, var(--bg) 100%); color: var(--ink); font-family: "Neue Montreal", system-ui, sans-serif; overflow-x: hidden; }
+.np h1, .np h2 { font-family: "Saol Display", serif; font-weight: 300; margin: 0; }
+.np em { font-style: italic; color: var(--sun); }
+.np-k { margin: 0 0 1rem; font-size: .75rem; letter-spacing: .2em; text-transform: uppercase; color: var(--sun); }
+
+/* Arriving from the water: bright surface fades away */
+.np-surface { position: fixed; inset: 0; z-index: 50; pointer-events: none; background: radial-gradient(80% 60% at 50% 0%, #fff7ea 0%, #ffd9a8 35%, #7a5bd0 75%, #0b0812 100%); animation: np-surface 1.8s cubic-bezier(.2,.7,.2,1) forwards; }
+@keyframes np-surface { 0% { opacity: 1; transform: translateY(0); filter: blur(0); } 100% { opacity: 0; transform: translateY(-30%); filter: blur(30px); } }
+
+.np-top { position: fixed; top: 0; left: 0; right: 0; z-index: 40; display: flex; justify-content: space-between; align-items: center; padding: 20px clamp(16px, 4vw, 48px); }
+.np-back, .np-pill { color: var(--ink); text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; padding: 0 18px; border-radius: 999px; border: 1px solid rgba(245,239,230,.35); backdrop-filter: blur(10px); font-size: .9rem; }
+.np-pill { background: var(--ink); color: #140c20; border-color: var(--ink); }
+
+.np-hero { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; align-items: center; padding: 100px clamp(16px, 6vw, 96px) 40px; gap: 24px; }
+.np-hero h1 { font-size: clamp(3.2rem, 8vw, 8rem); line-height: .92; margin-bottom: 2rem; }
+.np-hero__model { position: relative; height: min(80vh, 720px); }
+.np-3d { position: absolute; inset: 0; }
+.np-fallback { width: 100%; height: 100%; object-fit: contain; }
+.np-hint { position: absolute; bottom: 0; width: 100%; text-align: center; font-size: .75rem; opacity: .5; margin: 0; }
+.np-cta { display: inline-flex; align-items: center; min-height: 52px; padding: 0 28px; border-radius: 999px; background: linear-gradient(90deg, var(--sun), #e2708a); color: #140c20; text-decoration: none; font-weight: 500; box-shadow: 0 10px 40px rgba(240,163,94,.35); transition: transform .2s; }
+.np-cta:hover { transform: translateY(-2px); }
+
+.np-film { position: relative; margin: 0 clamp(16px, 4vw, 48px); border-radius: 28px; overflow: hidden; aspect-ratio: 16/8; background: #000; }
+.np-film video { width: 100%; height: 100%; object-fit: cover; }
+.np-film__stats { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-around; padding: 28px; background: linear-gradient(transparent, rgba(0,0,0,.7)); }
+.np-film__stats div { display: flex; flex-direction: column; align-items: center; }
+.np-film__stats b { font-family: "Saol Display", serif; font-weight: 300; font-size: clamp(1.8rem, 4vw, 3.4rem); }
+.np-film__stats span { font-size: .75rem; opacity: .7; letter-spacing: .15em; text-transform: uppercase; }
+
+.np-uses { padding: 120px clamp(16px, 4vw, 48px) 60px; }
+.np-uses__grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 16px; }
+.np-use { position: relative; margin: 0; border-radius: 22px; overflow: hidden; aspect-ratio: 3/4; }
+.np-use:first-child { aspect-ratio: auto; }
+.np-use img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
+.np-use:hover img { transform: scale(1.06); }
+.np-use figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px; background: linear-gradient(transparent, rgba(8,5,14,.85)); font-family: "Saol Display", serif; font-size: 1.6rem; }
+.np-use figcaption span { display: block; font-family: "Neue Montreal", sans-serif; font-size: .7rem; letter-spacing: .2em; text-transform: uppercase; color: var(--sun); margin-bottom: 6px; }
+
+.np-flow { display: flex; justify-content: center; gap: clamp(16px, 6vw, 96px); padding: 60px 16px; font-family: "Saol Display", serif; font-size: clamp(1.6rem, 4vw, 3.2rem); }
+.np-flow i { display: block; font-style: normal; font-family: "Neue Montreal", sans-serif; font-size: .8rem; color: var(--vio); }
+
+.np-buy { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 32px; margin: 60px clamp(16px, 4vw, 48px); padding: clamp(24px, 5vw, 64px); border-radius: 32px; background: linear-gradient(135deg, rgba(155,107,255,.18), rgba(240,163,94,.14)); border: 1px solid rgba(245,239,230,.15); }
+.np-buy img { width: 100%; max-width: 420px; justify-self: center; filter: drop-shadow(0 30px 60px rgba(155,107,255,.45)); }
+.np-buy h2 { font-size: clamp(2.4rem, 6vw, 5rem); margin-bottom: 1.2rem; }
+.np-buy h2 b { font-weight: 300; color: var(--sun); }
+.np-buy ul { list-style: none; padding: 0; margin: 0 0 2rem; line-height: 2; opacity: .85; }
+.np-buy li::before { content: "— "; color: var(--vio); }
+.np-foot { text-align: center; padding: 40px 16px 60px; font-size: .75rem; opacity: .5; }
+
+.np-reveal { opacity: 0; transform: translateY(40px); transition: opacity 1s ease, transform 1s cubic-bezier(.2,.7,.2,1); }
+.np-reveal.is-in { opacity: 1; transform: none; }
+
+@media (max-width: 767px) {
+  .np-hero { grid-template-columns: 1fr; text-align: center; padding-top: 90px; }
+  .np-hero__model { height: 52vh; order: -1; }
+  .np-film { aspect-ratio: 4/5; }
+  .np-uses__grid { grid-template-columns: 1fr; }
+  .np-use, .np-use:first-child { aspect-ratio: 4/3; }
+  .np-flow { flex-direction: column; align-items: center; text-align: center; }
+  .np-buy { grid-template-columns: 1fr; text-align: center; }
+}
+@media (prefers-reduced-motion: reduce) { .np-surface { animation-duration: .01s; } .np-reveal { transition: none; opacity: 1; transform: none; } }
