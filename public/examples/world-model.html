@@ -617,6 +617,9 @@
 
     controller.classList.add('collapsed');
     hideOtherButtons(cfg.key);
+    cfg.orig = cfg.orig || cfg.btnEl.textContent;
+    cfg.btnEl.classList.add('chosen');
+    controller.classList.add('other-fading');
     moveLabelToCapsule(cfg.btnEl);
     labelEl.classList.add('fading-out');
 
@@ -651,17 +654,19 @@
   }
 
   function onForwardComplete(cfg){
-    labelEl.textContent = 'Reset';
-    labelEl.classList.remove('fading-out');
-    labelEl.classList.remove('label');
-    labelEl.classList.add('cell', 'reset-label');
-    labelEl.setAttribute('role','button');
-    labelEl.setAttribute('tabindex','0');
-    labelEl.style.cursor = 'pointer';
+    // The chosen button itself, now sitting in the centred capsule, becomes Reset.
+    var btn = cfg.btnEl;
+    btn.textContent = 'Reset';
+    btn.classList.add('reset-label');
+    btn.disabled = false;
+    btn.removeAttribute('aria-hidden');
+    btn.removeAttribute('tabindex');
+    btn.removeAttribute('aria-disabled');
+    btn.setAttribute('aria-label', 'Reset to the base scene');
     announce(cfg.label + ' selected.');
     controller.classList.add('selected');
     if (focusMemory[cfg.key]){
-      labelEl.focus({preventScroll:true});
+      btn.focus({preventScroll:true});
     }
   }
 
@@ -695,28 +700,31 @@
   function runReverse(cfg){
     var token = ++currentToken;
     lock = true;
-    var hadFocus = (document.activeElement === labelEl);
+    var btn = cfg.btnEl;
+    var hadFocus = (document.activeElement === btn);
+    focusMemory[cfg.key] = hadFocus;
     disableAllButtons();
-    labelEl.removeAttribute('role');
-    labelEl.removeAttribute('tabindex');
-    labelEl.style.cursor = '';
     state.playback = 'starting';
     announce('Returning to base...');
 
-    labelEl.classList.remove('reset-label');
-    labelEl.style.transition = 'opacity 400ms';
-    labelEl.style.opacity = '0';
+    btn.classList.remove('reset-label');
+    btn.style.transition = 'opacity 400ms, transform 980ms var(--retake-slow-ease)';
+    btn.style.opacity = '0';
 
     controller.classList.remove('selected');
     controller.classList.remove('collapsed');
+    controller.classList.remove('other-fading');
 
     setTimeout(function(){
       if (token !== currentToken) return;
-      labelEl.textContent = 'Select state →';
-      labelEl.classList.add('label');
-      labelEl.style.transition = 'opacity 760ms var(--retake-ease)';
-      labelEl.style.opacity = '1';
-      resetLabelTransform(cfg.btnEl);
+      labelEl.classList.remove('fading-out');
+      btn.textContent = cfg.orig || cfg.label;
+      btn.removeAttribute('aria-label');
+      btn.classList.remove('chosen');
+      btn.style.transition = 'opacity 760ms var(--retake-ease), transform 980ms var(--retake-slow-ease)';
+      btn.style.transform = '';
+      btn.style.opacity = '';
+      setTimeout(function(){ if (token === currentToken) btn.style.transition = ''; }, 1000);
     }, 60);
 
     var revEl = cfg.revEl;
@@ -740,6 +748,7 @@
         showTitle();
         announce('Back to base.');
         restoreButtons();
+        if (focusMemory[cfg.key]) cfg.btnEl.focus({preventScroll:true});
       });
     }).catch(function(err){
       if (token !== currentToken) return;
@@ -763,24 +772,11 @@
   CONFIG.forEach(function(c){
     c.btnEl.addEventListener('click', function(){
       if (lock) return;
+      if (state.scene === c.key){ runReverse(c); return; }
       if (state.scene !== 'base') return;
       if (!c.ready) return;
       runForward(c);
     });
-  });
-
-  labelEl.addEventListener('click', function(){
-    if (lock) return;
-    if (state.scene === 'base') return;
-    var cfg = null;
-    CONFIG.forEach(function(c){ if (c.key === state.scene) cfg = c; });
-    if (cfg) runReverse(cfg);
-  });
-  labelEl.addEventListener('keydown', function(e){
-    if (e.key === 'Enter' || e.key === ' '){
-      e.preventDefault();
-      labelEl.click();
-    }
   });
 
   // hover/focus capsule movement (desktop)
