@@ -277,7 +277,10 @@
    see-through background with features spread down the page (no project tiles). It opens
    on its own timer, so it never waits on the 3D scene. */
 (function () {
-  var el, shownAt = 0;
+  var el, shownAt = 0, entered = 0;
+  document.addEventListener("click", function (e) {
+    if (e.target.closest && e.target.closest(".js-enter-btn, .js-enter-no-audio-btn, .loader button")) entered = Date.now();
+  }, true);
   var F = [
     ["Records every word", "One tap. Crystal-clear audio from across the table."],
     ["Writes it for you", "Accurate transcripts in 112 languages, Arabic included."],
@@ -326,7 +329,7 @@
     if (!shownAt) shownAt = Date.now();
     var L = document.querySelector(".loader.js-loader"), cs = L && getComputedStyle(L);
     var ready = !L || cs.visibility === "hidden" || cs.display === "none" || +cs.opacity < .1;
-    // Show after the rise finishes, or after 6s whatever the scene is doing.
-    if ((ready && Date.now() - shownAt > 1200) || Date.now() - shownAt > 6000) el.classList.add("is-visible");
+    // Show after the rise finishes, or 4s after Enter whatever the scene is doing.
+    if ((ready && Date.now() - shownAt > 1200) || (entered && Date.now() - entered > 4000)) el.classList.add("is-visible");
   }, 200);
 })();
