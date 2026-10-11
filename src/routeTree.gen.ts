@@ -13,7 +13,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as WorldRouteImport } from './routes/world'
-import { Route as WorldPlaudNotepinRouteImport } from './routes/world_.plaud-notepin'
 import { Route as WpContentSplatRouteImport } from './routes/wp-content/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -36,11 +35,6 @@ const WorldRoute = WorldRouteImport.update({
   path: '/world',
   getParentRoute: () => rootRouteImport,
 } as any)
-const WorldPlaudNotepinRoute = WorldPlaudNotepinRouteImport.update({
-  id: '/world_/plaud-notepin',
-  path: '/world/plaud-notepin',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const WpContentSplatRoute = WpContentSplatRouteImport.update({
   id: '/wp-content/$',
   path: '/wp-content/$',
@@ -52,7 +46,6 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/projects': typeof ProjectsRoute
   '/world': typeof WorldRoute
-  '/world/plaud-notepin': typeof WorldPlaudNotepinRoute
   '/wp-content/$': typeof WpContentSplatRoute
 }
 export interface FileRoutesByTo {
@@ -60,7 +53,6 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/projects': typeof ProjectsRoute
   '/world': typeof WorldRoute
-  '/world/plaud-notepin': typeof WorldPlaudNotepinRoute
   '/wp-content/$': typeof WpContentSplatRoute
 }
 export interface FileRoutesById {
@@ -69,34 +61,14 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/projects': typeof ProjectsRoute
   '/world': typeof WorldRoute
-  '/world_/plaud-notepin': typeof WorldPlaudNotepinRoute
   '/wp-content/$': typeof WpContentSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/contact'
-    | '/projects'
-    | '/world'
-    | '/world/plaud-notepin'
-    | '/wp-content/$'
+  fullPaths: '/' | '/contact' | '/projects' | '/world' | '/wp-content/$'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/contact'
-    | '/projects'
-    | '/world'
-    | '/world/plaud-notepin'
-    | '/wp-content/$'
-  id:
-    | '__root__'
-    | '/'
-    | '/contact'
-    | '/projects'
-    | '/world'
-    | '/world_/plaud-notepin'
-    | '/wp-content/$'
+  to: '/' | '/contact' | '/projects' | '/world' | '/wp-content/$'
+  id: '__root__' | '/' | '/contact' | '/projects' | '/world' | '/wp-content/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -104,7 +76,6 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   ProjectsRoute: typeof ProjectsRoute
   WorldRoute: typeof WorldRoute
-  WorldPlaudNotepinRoute: typeof WorldPlaudNotepinRoute
   WpContentSplatRoute: typeof WpContentSplatRoute
 }
 
@@ -138,13 +109,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorldRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/world_/plaud-notepin': {
-      id: '/world_/plaud-notepin'
-      path: '/world/plaud-notepin'
-      fullPath: '/world/plaud-notepin'
-      preLoaderRoute: typeof WorldPlaudNotepinRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/wp-content/$': {
       id: '/wp-content/$'
       path: '/wp-content/$'
@@ -160,7 +124,6 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   ProjectsRoute: ProjectsRoute,
   WorldRoute: WorldRoute,
-  WorldPlaudNotepinRoute: WorldPlaudNotepinRoute,
   WpContentSplatRoute: WpContentSplatRoute,
 }
 export const routeTree = rootRouteImport
