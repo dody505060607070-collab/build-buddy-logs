@@ -115,7 +115,7 @@
     var t = e.target.closest && e.target.closest(".dm-music__track");
     if (t) { current = +t.dataset.i; muted = false; play(); render(); return; }
     if (e.target.closest && e.target.closest(".dm-music__mute")) {
-      muted = !muted;
+      muted = !muted; window.__dmMusicMuted = muted;
       if (muted) { alt.pause(); setSiteMute(true); } else play();
       render(); return;
     }
