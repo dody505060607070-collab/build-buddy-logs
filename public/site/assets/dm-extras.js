@@ -492,16 +492,31 @@
 
 /* Examples open inside the site: the water slides away to the left and the example glides in from the right. */
 (function () {
-  var box = null, busy = 0;
+  var box = null, busy = 0, oldTitle = "", fetched = {};
+  var NAMES = { "feather-atlas": "Feather Atlas", "planet-jumping": "Planet Jumping" };
+  function nameOf(u) { var k = u.split("/").pop().replace(/\.html$/, ""); return NAMES[k] || k.replace(/-/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
+  // Warm the example up as soon as a finger or mouse gets near its card, so it opens fast.
+  function warm(u) {
+    u = new URL(u, location.href).pathname; if (fetched[u]) return; fetched[u] = 1;
+    var l = document.createElement("link"); l.rel = "prefetch"; l.href = u; document.head.appendChild(l);
+    if (/feather/.test(u)) ["https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"].forEach(function (h) {
+      var m = document.createElement("link"); m.rel = "modulepreload"; m.href = h; m.crossOrigin = "anonymous"; document.head.appendChild(m);
+    });
+  }
+  ["pointerover", "touchstart", "focusin"].forEach(function (ev) {
+    document.addEventListener(ev, function (e) { var a = e.target.closest && e.target.closest("a[href]"); if (a && isEx(a.href)) warm(a.href); }, { passive: true, capture: true });
+  });
   function isEx(u) { try { return /^\/examples\//.test(new URL(u, location.href).pathname); } catch (e) { return false; } }
   function close() {
     if (!box) return; var b = box; box = null;
     b.classList.remove("is-on"); document.documentElement.classList.remove("dm-siding");
+    if (oldTitle) { document.title = oldTitle; oldTitle = ""; }
     setTimeout(function () { b.remove(); }, 1200);
   }
   function open(url) {
     if (Date.now() - busy < 1300) return; busy = Date.now();
     url = new URL(url, location.href).pathname;
+    if (!oldTitle) oldTitle = document.title; document.title = nameOf(url) + " — Digitmask Example";
     if (box) { // next example: slide the current one away, the next one in
       var old = box.querySelector("iframe"), f = document.createElement("iframe");
       f.src = url; f.title = "Example"; f.className = "dm-ex__f is-next"; box.appendChild(f);
