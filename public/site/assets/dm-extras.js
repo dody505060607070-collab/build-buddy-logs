@@ -191,86 +191,33 @@
     if (e.target && e.target.tagName === "IMG") e.preventDefault();
   });
 })();
-/* PLAUD NotePin exhibit inside Digitmask World (DOM overlay; the 3D scene is untouched) */
+/* Home: "Rise to NotePin" — the opposite of "View our work": the view lifts up through the water surface into the NotePin page */
 (function () {
-  var A = "/site/assets/notepin/", PAGE = "/world/plaud-notepin";
-  var STEPS = [
-    { k: "Record", img: "record.jpg", t: "Capture the in-person conversation with appropriate permission." },
-    { k: "Transcribe", img: "transcribe.jpg", t: "Sync your recording to the Plaud app for transcription." },
-    { k: "Summarise", img: "summarise.jpg", t: "Generate an organised summary and review the important details." }
-  ];
-  var tag, panel, lastFocus, busy = false;
-  function inWorld() { return /^\/world\/?$/.test(location.pathname); }
-  function reduced() { return window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches; }
-  function go(e) { if (e) e.preventDefault(); location.href = PAGE; }
-  function build() {
-    tag = document.createElement("div");
-    tag.className = "dm-np-tag";
-    tag.innerHTML = '<img src="' + A + 'hero.jpg" alt="PLAUD NotePin wearable voice recorder" loading="lazy">' +
-      '<div><p class="dm-np-tag__k">PLAUD NotePin</p><p class="dm-np-tag__t">Your conversations. Organised.</p>' +
-      '<button type="button" class="dm-np-btn js-np-open">Explore NotePin</button></div>';
-    document.body.appendChild(tag);
+  var btn, busy = false;
+  function onHome() { return location.pathname === "/" || location.pathname === ""; }
+  function entered() { return !document.querySelector(".js-loader:not(.is-hidden)") && document.body.classList.contains("is-entered") || window.__dmEntered; }
+  function make() {
+    btn = document.createElement("a");
+    btn.href = "/notepin"; btn.className = "dm-rise"; btn.setAttribute("aria-label", "Rise up to PLAUD NotePin");
+    btn.innerHTML = '<span class="dm-rise__arrow">↑</span><span>PLAUD NotePin</span>';
+    document.body.appendChild(btn);
+    btn.addEventListener("click", rise);
   }
-  function openPanel() {
-    if (busy || panel) return; busy = true; lastFocus = document.activeElement;
-    panel = document.createElement("div");
-    panel.className = "dm-np-panel"; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-modal", "true"); panel.setAttribute("aria-label", "PLAUD NotePin");
-    panel.innerHTML = '<div class="dm-np-panel__box"><button type="button" class="dm-np-close js-np-close" aria-label="Close">×</button>' +
-      '<p class="dm-np-tag__k">PLAUD NotePin</p><h2 class="dm-np-h">Be present. Keep the details.</h2>' +
-      '<div class="dm-np-steps" role="tablist">' + STEPS.map(function (s, i) { return '<button type="button" role="tab" class="dm-np-step" data-i="' + i + '">' + (i + 1) + '. ' + s.k + '</button>'; }).join("") + '</div>' +
-      '<figure class="dm-np-fig"><img alt=""><figcaption></figcaption></figure>' +
-      '<p class="dm-np-note">Illustrative example — not a real customer or actual app screen.</p>' +
-      '<a class="dm-np-btn dm-np-btn--solid" href="' + PAGE + '">See details &amp; order</a></div>';
-    document.body.appendChild(panel);
-    pick(0);
-    requestAnimationFrame(function () { panel.classList.add("is-open"); panel.querySelector(".js-np-close").focus(); setTimeout(function () { busy = false; }, reduced() ? 0 : 260); });
+  function rise(e) {
+    e.preventDefault(); e.stopPropagation(); if (busy) return; busy = true;
+    var A = window.__dmAudio; try { A && A.filterTo && A.filterTo(22000, 1.4); } catch (x) {}
+    var sky = document.createElement("div"); sky.className = "dm-rise-sky"; document.body.appendChild(sky);
+    document.documentElement.classList.add("dm-rising");
+    requestAnimationFrame(function () { sky.classList.add("is-on"); });
+    setTimeout(function () { location.href = "/notepin"; }, 1700);
   }
-  function pick(i) {
-    var s = STEPS[i], f = panel.querySelector(".dm-np-fig");
-    panel.querySelectorAll(".dm-np-step").forEach(function (b, j) { b.setAttribute("aria-selected", j === i ? "true" : "false"); });
-    f.classList.add("is-fading");
-    setTimeout(function () { f.querySelector("img").src = A + s.img; f.querySelector("figcaption").textContent = s.t; f.classList.remove("is-fading"); }, reduced() ? 0 : 120);
-  }
-  function closePanel() {
-    if (!panel) return; var p = panel; panel = null; busy = false;
-    p.classList.remove("is-open"); setTimeout(function () { p.remove(); }, reduced() ? 0 : 250);
-    if (lastFocus && lastFocus.focus) lastFocus.focus();
-  }
-  document.addEventListener("click", function (e) {
-    var t = e.target.closest ? e.target : null; if (!t) return;
-    if (t.closest(".js-np-open")) { e.preventDefault(); e.stopPropagation(); openPanel(); return; }
-    if (t.closest(".js-np-close") || t === panel) { e.preventDefault(); e.stopPropagation(); closePanel(); return; }
-    var st = t.closest(".dm-np-step"); if (st && panel) { pick(+st.dataset.i); return; }
-    if (t.closest('a[href^="/world/plaud-notepin"]')) { e.stopPropagation(); go(e); }
-  }, true);
-  document.addEventListener("keydown", function (e) {
-    if (!panel) return;
-    if (e.key === "Escape") { closePanel(); return; }
-    if (e.key === "Tab") {
-      var f = panel.querySelectorAll("button,a"); var a = f[0], z = f[f.length - 1];
-      if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); }
-      else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
-    }
-  });
-  ["wheel", "touchmove"].forEach(function (n) { document.addEventListener(n, function (e) { if (panel && panel.contains(e.target)) e.stopPropagation(); }, { capture: true, passive: true }); });
   var shownAt = 0;
-  function loaderUp() {
-    var bs = document.querySelectorAll(".js-enter-no-audio-btn, .js-enter-btn, .js-loader, .loader");
-    for (var i = 0; i < bs.length; i++) {
-      var r = bs[i].getBoundingClientRect(); if (!r.width || !r.height) continue;
-      var cs = getComputedStyle(bs[i]); if (cs.visibility === "hidden" || +cs.opacity === 0) continue;
-      var el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-      if (el && (el === bs[i] || bs[i].contains(el))) return true;
-    }
-    return false;
-  }
   setInterval(function () {
-    if (!tag) build();
-    var loading = loaderUp();
-    if (inWorld() && !loading) { if (!shownAt) shownAt = Date.now(); }
-    else shownAt = 0;
-    var show = inWorld() && !loading && Date.now() - shownAt > 2500;
-    tag.classList.toggle("is-visible", show);
-    if (!inWorld() && panel) closePanel();
+    if (!document.body) return; if (!btn) make();
+    var loaderGone = !document.querySelector(".loader.js-loader") || getComputedStyle(document.querySelector(".loader.js-loader")).visibility === "hidden" || getComputedStyle(document.querySelector(".loader.js-loader")).display === "none";
+    var show = onHome() && loaderGone;
+    if (show && !shownAt) shownAt = Date.now();
+    if (!show) shownAt = 0;
+    btn.classList.toggle("is-visible", show && Date.now() - shownAt > 1500);
   }, 300);
 })();

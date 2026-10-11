@@ -11,9 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as NotepinRouteImport } from './routes/notepin'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as WorldRouteImport } from './routes/world'
-import { Route as WorldPlaudNotepinRouteImport } from './routes/world_.plaud-notepin'
 import { Route as WpContentSplatRouteImport } from './routes/wp-content/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -26,6 +26,11 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotepinRoute = NotepinRouteImport.update({
+  id: '/notepin',
+  path: '/notepin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjectsRoute = ProjectsRouteImport.update({
   id: '/projects',
   path: '/projects',
@@ -34,11 +39,6 @@ const ProjectsRoute = ProjectsRouteImport.update({
 const WorldRoute = WorldRouteImport.update({
   id: '/world',
   path: '/world',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const WorldPlaudNotepinRoute = WorldPlaudNotepinRouteImport.update({
-  id: '/world_/plaud-notepin',
-  path: '/world/plaud-notepin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WpContentSplatRoute = WpContentSplatRouteImport.update({
@@ -50,61 +50,50 @@ const WpContentSplatRoute = WpContentSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/contact': typeof ContactRoute
+  '/notepin': typeof NotepinRoute
   '/projects': typeof ProjectsRoute
   '/world': typeof WorldRoute
-  '/world/plaud-notepin': typeof WorldPlaudNotepinRoute
   '/wp-content/$': typeof WpContentSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/contact': typeof ContactRoute
+  '/notepin': typeof NotepinRoute
   '/projects': typeof ProjectsRoute
   '/world': typeof WorldRoute
-  '/world/plaud-notepin': typeof WorldPlaudNotepinRoute
   '/wp-content/$': typeof WpContentSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/contact': typeof ContactRoute
+  '/notepin': typeof NotepinRoute
   '/projects': typeof ProjectsRoute
   '/world': typeof WorldRoute
-  '/world_/plaud-notepin': typeof WorldPlaudNotepinRoute
   '/wp-content/$': typeof WpContentSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
-    | '/contact'
-    | '/projects'
-    | '/world'
-    | '/world/plaud-notepin'
-    | '/wp-content/$'
+    '/' | '/contact' | '/notepin' | '/projects' | '/world' | '/wp-content/$'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/contact'
-    | '/projects'
-    | '/world'
-    | '/world/plaud-notepin'
-    | '/wp-content/$'
+  to: '/' | '/contact' | '/notepin' | '/projects' | '/world' | '/wp-content/$'
   id:
     | '__root__'
     | '/'
     | '/contact'
+    | '/notepin'
     | '/projects'
     | '/world'
-    | '/world_/plaud-notepin'
     | '/wp-content/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ContactRoute: typeof ContactRoute
+  NotepinRoute: typeof NotepinRoute
   ProjectsRoute: typeof ProjectsRoute
   WorldRoute: typeof WorldRoute
-  WorldPlaudNotepinRoute: typeof WorldPlaudNotepinRoute
   WpContentSplatRoute: typeof WpContentSplatRoute
 }
 
@@ -124,6 +113,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/notepin': {
+      id: '/notepin'
+      path: '/notepin'
+      fullPath: '/notepin'
+      preLoaderRoute: typeof NotepinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects': {
       id: '/projects'
       path: '/projects'
@@ -136,13 +132,6 @@ declare module '@tanstack/react-router' {
       path: '/world'
       fullPath: '/world'
       preLoaderRoute: typeof WorldRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/world_/plaud-notepin': {
-      id: '/world_/plaud-notepin'
-      path: '/world/plaud-notepin'
-      fullPath: '/world/plaud-notepin'
-      preLoaderRoute: typeof WorldPlaudNotepinRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/wp-content/$': {
@@ -158,9 +147,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ContactRoute: ContactRoute,
+  NotepinRoute: NotepinRoute,
   ProjectsRoute: ProjectsRoute,
   WorldRoute: WorldRoute,
-  WorldPlaudNotepinRoute: WorldPlaudNotepinRoute,
   WpContentSplatRoute: WpContentSplatRoute,
 }
 export const routeTree = rootRouteImport
