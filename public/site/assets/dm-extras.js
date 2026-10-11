@@ -272,3 +272,61 @@
     if (vol === 0 && t === 0 && !a.paused && document.hidden) a.pause();
   }, 50);
 })();
+
+/* NotePin page: its own dusk-coloured layer over the water scene. The product floats on a
+   see-through background with features spread down the page (no project tiles). It opens
+   on its own timer, so it never waits on the 3D scene. */
+(function () {
+  var el, shownAt = 0;
+  var F = [
+    ["Records every word", "One tap. Crystal-clear audio from across the table."],
+    ["Writes it for you", "Accurate transcripts in 112 languages, Arabic included."],
+    ["Summaries by morning", "Key points, deadlines and action items, ready to file."],
+    ["Private by design", "Encrypted end to end. Your client files stay yours."]
+  ];
+  function build() {
+    el = document.createElement("section"); el.className = "dm-npx"; el.setAttribute("aria-label", "PLAUD NotePin");
+    el.innerHTML =
+      '<div class="dm-npx__glow"></div>' +
+      '<header class="dm-npx__hero"><div class="dm-npx__copy"><p class="dm-npx__kicker">Digitmask × PLAUD</p>' +
+      '<h2 class="dm-npx__title">PLAUD<br><em>NotePin</em></h2>' +
+      '<p class="dm-npx__lead">The AI note-taker trusted by leading lawyers and law firms.</p>' +
+      '<a class="dm-npx__btn" href="mailto:hello@digitmask.com?subject=NotePin%20subscription">Subscribe · AED 800 / month</a></div>' +
+      '<div class="dm-npx__product"><img src="/site/assets/np-product.png" alt="PLAUD NotePin device" width="1024" height="1024"></div></header>' +
+      '<div class="dm-npx__feats">' + F.map(function (f, i) {
+        return '<div class="dm-npx__feat dm-npx__feat--' + i + '"><span>0' + (i + 1) + '</span><h3>' + f[0] + '</h3><p>' + f[1] + '</p></div>';
+      }).join("") + '</div>' +
+      '<div class="dm-npx__uses">' +
+        '<figure class="dm-npx__use dm-npx__use--a"><img src="/site/assets/np-meeting.jpg" alt="Lawyer meeting a client" loading="lazy"><figcaption>Client meetings</figcaption></figure>' +
+        '<figure class="dm-npx__use dm-npx__use--b"><img src="/site/assets/np-lawyer.jpg" alt="Lawyer in negotiation" loading="lazy"><figcaption>Negotiations</figcaption></figure>' +
+        '<figure class="dm-npx__use dm-npx__use--c"><img src="/site/assets/np-desk.jpg" alt="NotePin on a lawyer\'s desk" loading="lazy"><figcaption>Case preparation</figcaption></figure>' +
+      '</div>' +
+      '<footer class="dm-npx__price"><p class="dm-npx__kicker">One simple plan</p><p class="dm-npx__amount">AED 800<small> / month</small></p>' +
+      '<p class="dm-npx__lead">Device, AI transcription and support included. Cancel anytime.</p>' +
+      '<a class="dm-npx__btn" href="/contact/">Talk to us</a></footer>';
+    ["wheel", "touchmove", "touchstart", "pointerdown", "mousedown"].forEach(function (ev) {
+      el.addEventListener(ev, function (e) { e.stopPropagation(); }, { passive: true });
+    });
+    document.body.appendChild(el);
+  }
+  // Top-menu NotePin link: same rise as the Home button.
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest(".dm-nav-np"); if (!a) return;
+    e.preventDefault(); e.stopPropagation();
+    if (/^\/notepin/.test(location.pathname)) return;
+    var r = document.querySelector(".dm-rise");
+    if (location.pathname === "/" && r) { r.click(); return; }
+    location.href = "/notepin/";
+  }, true);
+  setInterval(function () {
+    if (!document.body) return; if (!el) build();
+    var on = /^\/notepin/.test(location.pathname);
+    document.documentElement.classList.toggle("dm-on-np", on);
+    if (!on) { shownAt = 0; el.classList.remove("is-visible"); return; }
+    if (!shownAt) shownAt = Date.now();
+    var L = document.querySelector(".loader.js-loader"), cs = L && getComputedStyle(L);
+    var ready = !L || cs.visibility === "hidden" || cs.display === "none" || +cs.opacity < .1;
+    // Show after the rise finishes, or after 6s whatever the scene is doing.
+    if ((ready && Date.now() - shownAt > 1200) || Date.now() - shownAt > 6000) el.classList.add("is-visible");
+  }, 200);
+})();
