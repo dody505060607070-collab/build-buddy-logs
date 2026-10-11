@@ -762,6 +762,16 @@
     announce('Something went wrong loading ' + cfg.label + '.');
     noticeText.textContent = 'We hit a snag loading ' + cfg.label + '. Please retry.';
     notice.hidden = false;
+    if (direction === 'forward'){
+      // Re-open the bar so the visitor is never stuck with a half-collapsed controller.
+      controller.classList.remove('collapsed','selected','other-fading');
+      cfg.btnEl.classList.remove('chosen','reset-label');
+      cfg.btnEl.style.transform = ''; cfg.btnEl.style.opacity = '';
+      if (cfg.orig) cfg.btnEl.textContent = cfg.orig;
+      labelEl.classList.remove('fading-out');
+      state.scene = 'base';
+      restoreButtons(); showTitle();
+    }
     lastRetryFn = function(){
       notice.hidden = true;
       if (direction === 'forward') runForward(cfg); else runReverse(cfg);
