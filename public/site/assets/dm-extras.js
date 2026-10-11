@@ -252,6 +252,12 @@
     if ((isNp(from) && isPr(to)) || (isPr(from) && isNp(to))) { e.preventDefault(); e.stopPropagation(); location.href = to; }
   }, true);
   var pending = null, shownAt = 0;
+  // Every frame: Services tiles only show on Projects, or on Home when not coming from / going to NotePin.
+  (function tiles() {
+    var p = location.pathname, PMg = window.__dmG && window.__dmG.ProjectMenu && window.__dmG.ProjectMenu.projects;
+    if (PMg && "visible" in PMg) PMg.visible = isPr(p) || (!isNp(p) && !window.__dmFromNp && !(window.__dmGoingNp && Date.now() - window.__dmGoingNp < 7000));
+    requestAnimationFrame(tiles);
+  })();
   setInterval(function () {
     if (!document.body) return; if (!btn) make();
     var p = location.pathname;
@@ -259,7 +265,6 @@
     if (pending !== null && apply(false)) pending = null;
     // NotePin floats over empty water: the Projects tiles are hidden there.
     var PMg = window.__dmG && window.__dmG.ProjectMenu && window.__dmG.ProjectMenu.projects;
-    if (PMg && "visible" in PMg) PMg.visible = !isNp(p) && !(window.__dmGoingNp && Date.now() - window.__dmGoingNp < 7000);
     if (isNp(p)) window.__dmGoingNp = 0;
     var L = document.querySelector(".loader.js-loader"), cs = L && getComputedStyle(L);
     var M = document.querySelector(".js-menu"), mOpen = M && M.classList.contains("is-open");
