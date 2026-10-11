@@ -249,7 +249,10 @@
     if (!document.body) return; if (!btn) make();
     var p = location.pathname;
     if (p !== last) { last = p; pending = isNp(p) ? true : isPr(p) ? false : null; }
-    if (pending !== null && apply(pending)) pending = null;
+    if (pending !== null && apply(false)) pending = null;
+    // NotePin floats over empty water: the Projects tiles are hidden there.
+    var PMg = window.__dmG && window.__dmG.ProjectMenu && window.__dmG.ProjectMenu.projects;
+    if (PMg && "visible" in PMg) PMg.visible = !isNp(p);
     var L = document.querySelector(".loader.js-loader"), cs = L && getComputedStyle(L);
     var M = document.querySelector(".js-menu"), mOpen = M && M.classList.contains("is-open");
     var show = !mOpen && p === "/" && (!L || cs.visibility === "hidden" || cs.display === "none" || +cs.opacity < .1);
@@ -312,24 +315,40 @@
     ["Summaries by morning", "Key points, deadlines and action items, ready to file."],
     ["Private by design", "Encrypted end to end. Your client files stay yours."]
   ];
+  var V = [
+    ["/site/assets/np-product.png", "Front"], ["/site/assets/np-view-side.png", "Clip"],
+    ["/site/assets/np-view-wear.png", "Wear it"], ["/site/assets/np-view-dock.png", "Dock"], ["/site/assets/np-view-lapel.png", "Pocket"]
+  ];
+  function show(i) {
+    el.querySelectorAll(".dm-npx__shot").forEach(function (x, k) { x.classList.toggle("is-on", k === i); });
+    el.querySelectorAll(".dm-npx__view").forEach(function (x, k) { x.classList.toggle("is-on", k === i); });
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest(".dm-npx__view"); if (b) show(+b.dataset.v);
+  });
   function build() {
     el = document.createElement("section"); el.className = "dm-npx"; el.setAttribute("aria-label", "PLAUD NotePin");
     el.innerHTML =
       '<div class="dm-npx__glow"></div>' +
-      '<header class="dm-npx__hero"><div class="dm-npx__copy"><p class="dm-npx__kicker">Digitmask × PLAUD</p>' +
+      '<header class="dm-npx__hero"><div class="dm-npx__copy dm-glass"><p class="dm-npx__kicker">Digitmask × PLAUD</p>' +
       '<h2 class="dm-npx__title">PLAUD<br><em>NotePin</em></h2>' +
       '<p class="dm-npx__lead">The AI note-taker trusted by leading lawyers and law firms.</p>' +
+      '<ul class="dm-npx__stats"><li><b>112</b><span>languages</span></li><li><b>20h</b><span>recording</span></li><li><b>30g</b><span>weight</span></li></ul>' +
       '<a class="dm-npx__btn" href="mailto:hello@digitmask.com?subject=NotePin%20subscription">Subscribe · AED 800 / month</a></div>' +
-      '<div class="dm-npx__product"><img src="/site/assets/np-product.png" alt="PLAUD NotePin device" width="1024" height="1024"></div></header>' +
+      '<div class="dm-npx__product"><div class="dm-npx__stage">' + V.map(function (v, i) {
+        return '<img class="dm-npx__shot' + (i ? '' : ' is-on') + '" src="' + v[0] + '" alt="PLAUD NotePin, ' + v[1] + '" width="1024" height="1024"' + (i ? ' loading="lazy"' : '') + '>';
+      }).join("") + '</div><div class="dm-npx__views dm-glass" role="tablist" aria-label="Product views">' + V.map(function (v, i) {
+        return '<button type="button" class="dm-npx__view' + (i ? '' : ' is-on') + '" data-v="' + i + '" aria-label="' + v[1] + '"><img src="' + v[0] + '" alt="" width="56" height="56"><span>' + v[1] + '</span></button>';
+      }).join("") + '</div></div></header>' +
       '<div class="dm-npx__feats">' + F.map(function (f, i) {
-        return '<div class="dm-npx__feat dm-npx__feat--' + i + '"><span>0' + (i + 1) + '</span><h3>' + f[0] + '</h3><p>' + f[1] + '</p></div>';
+        return '<div class="dm-npx__feat dm-glass dm-npx__feat--' + i + '"><span>0' + (i + 1) + '</span><h3>' + f[0] + '</h3><p>' + f[1] + '</p></div>';
       }).join("") + '</div>' +
       '<div class="dm-npx__uses">' +
-        '<figure class="dm-npx__use dm-npx__use--a"><img src="/site/assets/np-meeting.jpg" alt="Lawyer meeting a client" loading="lazy"><figcaption>Client meetings</figcaption></figure>' +
-        '<figure class="dm-npx__use dm-npx__use--b"><img src="/site/assets/np-lawyer.jpg" alt="Lawyer in negotiation" loading="lazy"><figcaption>Negotiations</figcaption></figure>' +
-        '<figure class="dm-npx__use dm-npx__use--c"><img src="/site/assets/np-desk.jpg" alt="NotePin on a lawyer\'s desk" loading="lazy"><figcaption>Case preparation</figcaption></figure>' +
+        '<figure class="dm-npx__use dm-npx__use--a"><img src="/site/assets/np-meeting.jpg" alt="Lawyer meeting a client" loading="lazy"><figcaption class="dm-glass">Client meetings</figcaption></figure>' +
+        '<figure class="dm-npx__use dm-npx__use--b"><img src="/site/assets/np-lawyer.jpg" alt="Lawyer in negotiation" loading="lazy"><figcaption class="dm-glass">Negotiations</figcaption></figure>' +
+        '<figure class="dm-npx__use dm-npx__use--c"><img src="/site/assets/np-desk.jpg" alt="NotePin on a lawyer\'s desk" loading="lazy"><figcaption class="dm-glass">Case preparation</figcaption></figure>' +
       '</div>' +
-      '<footer class="dm-npx__price"><p class="dm-npx__kicker">One simple plan</p><p class="dm-npx__amount">AED 800<small> / month</small></p>' +
+      '<footer class="dm-npx__price dm-glass"><p class="dm-npx__kicker">One simple plan</p><p class="dm-npx__amount">AED 800<small> / month</small></p>' +
       '<p class="dm-npx__lead">Device, AI transcription and support included. Cancel anytime.</p>' +
       '<a class="dm-npx__btn" href="/contact/">Talk to us</a></footer>';
     ["wheel", "touchmove", "touchstart", "pointerdown", "mousedown"].forEach(function (ev) {
