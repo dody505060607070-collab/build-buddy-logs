@@ -397,6 +397,7 @@
     el.classList.remove("is-instant");
     if (!shownAt) shownAt = Date.now();
     var L = document.querySelector(".loader.js-loader"), cs = L && getComputedStyle(L);
+    if (L && entered && +cs.opacity < .6) L.style.visibility = "hidden";
     var ready = !L || cs.visibility === "hidden" || cs.display === "none" || +cs.opacity < .1;
     // Show after the rise finishes, or 4s after Enter whatever the scene is doing.
     // Appear only once the rise above the water has finished (fallback if the scene stalls).
