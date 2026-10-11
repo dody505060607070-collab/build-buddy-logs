@@ -191,3 +191,33 @@
     if (e.target && e.target.tagName === "IMG") e.preventDefault();
   });
 })();
+/* Home: "Rise to NotePin" — the opposite of "View our work": the view lifts up through the water surface into the NotePin page */
+(function () {
+  var btn, busy = false;
+  function onHome() { return location.pathname === "/" || location.pathname === ""; }
+  function entered() { return !document.querySelector(".js-loader:not(.is-hidden)") && document.body.classList.contains("is-entered") || window.__dmEntered; }
+  function make() {
+    btn = document.createElement("a");
+    btn.href = "/notepin"; btn.className = "dm-rise"; btn.setAttribute("aria-label", "Rise up to PLAUD NotePin");
+    btn.innerHTML = '<span class="dm-rise__arrow">↑</span><span>PLAUD NotePin</span>';
+    document.body.appendChild(btn);
+    btn.addEventListener("click", rise);
+  }
+  function rise(e) {
+    e.preventDefault(); e.stopPropagation(); if (busy) return; busy = true;
+    var A = window.__dmAudio; try { A && A.filterTo && A.filterTo(22000, 1.4); } catch (x) {}
+    var sky = document.createElement("div"); sky.className = "dm-rise-sky"; document.body.appendChild(sky);
+    document.documentElement.classList.add("dm-rising");
+    requestAnimationFrame(function () { sky.classList.add("is-on"); });
+    setTimeout(function () { location.href = "/notepin"; }, 1700);
+  }
+  var shownAt = 0;
+  setInterval(function () {
+    if (!document.body) return; if (!btn) make();
+    var loaderGone = !document.querySelector(".loader.js-loader") || getComputedStyle(document.querySelector(".loader.js-loader")).visibility === "hidden" || getComputedStyle(document.querySelector(".loader.js-loader")).display === "none";
+    var show = onHome() && loaderGone;
+    if (show && !shownAt) shownAt = Date.now();
+    if (!show) shownAt = 0;
+    btn.classList.toggle("is-visible", show && Date.now() - shownAt > 1500);
+  }, 300);
+})();

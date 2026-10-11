@@ -67,7 +67,7 @@ function NotePinPage() {
       <section className="np-film np-reveal">
         <video src={spin.url} autoPlay muted loop playsInline poster={product} />
         <div className="np-film__stats">
-          <div><b>30h</b><span>recording</span></div>
+          <div><b>20h</b><span>recording</span></div>
           <div><b>112</b><span>languages</span></div>
           <div><b>1 tap</b><span>to start</span></div>
         </div>

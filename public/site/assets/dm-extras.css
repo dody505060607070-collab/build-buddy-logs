@@ -103,3 +103,13 @@
 .dm-sheet .dm-brief { display: block !important; opacity: 1 !important; visibility: visible !important; transform: none !important; margin: 0 auto; max-width: 520px; position: relative !important; pointer-events: auto; }
 .dm-sheet__close { position: fixed; top: 18px; right: 18px; z-index: 2; width: 40px; height: 40px; border-radius: 50%; border: 0; background: #fff; color: #2a0b33; font-size: 26px; line-height: 40px; cursor: pointer; }
 .dm-sheet-open .js-contact-content { visibility: hidden !important; }
+/* Rise to NotePin */
+.dm-rise { position: fixed; z-index: 60; top: 22px; left: 50%; transform: translate(-50%, -10px); display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(245,239,230,.5); background: rgba(20,14,30,.35); backdrop-filter: blur(8px); color: #f5efe6; font-family: "Neue Montreal", system-ui, sans-serif; font-size: .9rem; text-decoration: none; opacity: 0; visibility: hidden; transition: opacity .4s, transform .4s, visibility .4s, background .2s; }
+.dm-rise.is-visible { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+.dm-rise:hover { background: rgba(245,239,230,.15); }
+.dm-rise__arrow { display: inline-block; animation: dm-rise-bob 1.6s ease-in-out infinite; }
+@keyframes dm-rise-bob { 50% { transform: translateY(-4px); } }
+.dm-rising canvas { transition: transform 1.7s cubic-bezier(.6,0,.3,1), filter 1.7s; transform: translateY(40%) scale(1.15); filter: blur(6px) brightness(1.6); }
+.dm-rise-sky { position: fixed; inset: 0; z-index: 2147483001; pointer-events: none; opacity: 0; transform: translateY(-60%); background: radial-gradient(80% 60% at 50% 0%, #fff7ea 0%, #ffd9a8 35%, #7a5bd0 75%, #0b0812 100%); transition: opacity 1.4s ease-in, transform 1.7s cubic-bezier(.6,0,.3,1); }
+.dm-rise-sky.is-on { opacity: 1; transform: none; }
+@media (max-width: 767px) { .dm-rise { top: 72px; font-size: .8rem; } }
