@@ -258,6 +258,37 @@
     if ((isNp(from) && isPr(to)) || (isPr(from) && isNp(to))) { e.preventDefault(); e.stopPropagation(); location.href = to; }
   }, true);
   var pending = null, shownAt = 0;
+  // Filter buttons: we choose the cards ourselves (never the hidden NotePin ones) and retry
+  // until the scene is free, so pressing any filter — or All — always shows its cards.
+  function showFilter(f, tries) {
+    var G = window.__dmG, PM = G && G.ProjectMenu;
+    if (!PM || !PM.projects || !PM.projects.children.length || !window.__dmEmit || PM.animatingFilter) {
+      if ((tries || 0) < 40) setTimeout(function () { showFilter(f, (tries || 0) + 1); }, 120); return;
+    }
+    var list = (window.projects || []).filter(function (e) {
+      var c = e.project.project_grid_category || [];
+      return !/^dm-np-/.test(e.images[0].name) && (f === "all" || c.indexOf(f) > -1);
+    }).map(function (e) { return e.project.title; });
+    if (!list.length) list = names(false);
+    window.__dmEmit("ProjectFilters:change", list);
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest(".js-project-filters\\:filterBtn"); if (!b || !b.dataset.filter) return;
+    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+    document.querySelectorAll(".js-project-filters\\:filterBtn").forEach(function (x) { x.classList.toggle("is-active", x === b); });
+    showFilter(b.dataset.filter);
+  }, true);
+  // Arriving on Projects: make sure All is loaded, checking again a few times in case the scene was busy.
+  var prWas = false;
+  setInterval(function () {
+    var on = isPr(location.pathname);
+    if (on && !prWas) [400, 1500, 3500].forEach(function (t) { setTimeout(function () {
+      if (!isPr(location.pathname)) return;
+      var act = document.querySelector(".js-project-filters\\:filterBtn.is-active");
+      if (!act || act.dataset.filter === "all") showFilter("all");
+    }, t); });
+    prWas = on;
+  }, 250);
   // Every frame: Services tiles only show on Projects, or on Home when not coming from / going to NotePin.
   (function tiles() {
     var p = location.pathname, PMg = window.__dmG && window.__dmG.ProjectMenu && window.__dmG.ProjectMenu.projects;
