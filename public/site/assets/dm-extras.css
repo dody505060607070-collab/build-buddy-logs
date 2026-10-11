@@ -132,3 +132,5 @@
   .dm-np-panel__box { border-radius: 0; max-width: none; padding: 56px 20px calc(24px + env(safe-area-inset-bottom)); }
 }
 @media (prefers-reduced-motion: reduce) { .dm-np-tag, .dm-np-panel, .dm-np-fig { transition: none; } }
+.dm-np-panel { z-index: 2147483000 !important; isolation: isolate; }
+.dm-np-panel .dm-np-btn--solid { background: #1a1224 !important; color: #f5efe6 !important; border-color: #1a1224 !important; }
