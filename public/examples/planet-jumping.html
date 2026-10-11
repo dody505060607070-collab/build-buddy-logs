@@ -150,6 +150,20 @@ body:not(.intro-ready) .header,body:not(.intro-ready) .planet-list,body:not(.int
   .portal-heading{font-size:14px} .portal-heading strong{font-size:16px}
   .menu{height:38px} .portal{border-radius:70px}
 }
+.planet-list{z-index:6}
+.planet-content{pointer-events:none}
+.planet-item{font:inherit;color:#fff;background:transparent;border:0;text-align:left;cursor:pointer!important}
+.planet-item:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.experience.is-last .portal-wrap{opacity:0;pointer-events:none}
+@media(max-width:640px){
+  .planet-list{display:flex;flex-direction:row;left:0;right:0;top:66px;transform:none;gap:2px;padding:0 12px;overflow-x:auto;scrollbar-width:none;font-size:13px}
+  .planet-list::-webkit-scrollbar{display:none}
+  .planet-item{flex:none;margin-left:0;padding:6px 10px;min-height:32px}
+  .planet-item.active{font-size:14px;gap:6px;background:rgba(255,255,255,.16)}
+  .planet-item.active:before{width:10px;height:10px}
+  .planet-item:hover{transform:none}
+  .intro-ready .planet-list{animation:reveal-down .9s cubic-bezier(.22,1,.36,1) .65s both}
+}
 @media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}.portal{transform:none!important}}
 </style>
 <style id="dm-slidein">html{background:#f6f1e7}body{animation:dmSlideIn 1s cubic-bezier(.22,1,.36,1) both}@keyframes dmSlideIn{from{transform:translate3d(30vw,0,0);opacity:0;filter:blur(8px)}to{transform:none;opacity:1;filter:none}}</style></head>
@@ -160,6 +174,11 @@ body:not(.intro-ready) .header,body:not(.intro-ready) .planet-list,body:not(.int
     <video id="mars-background" class="background is-visible" src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/3c83091e-4046-4fd6-adbb-2edb728be79a.mp4" muted playsinline preload="auto"></video>
     <video id="earth-background" class="background" src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/fc3ded42-e845-41f3-a830-5cab512d79cd.mp4" muted playsinline preload="metadata"></video>
     <video id="venus-background" class="background" src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/b30f64d9-1637-477a-83df-d0fc6461a422.mp4" muted playsinline preload="metadata"></video>
+    <img id="mercury-background" class="background" alt="" decoding="async">
+    <img id="jupiter-background" class="background" alt="" decoding="async">
+    <img id="saturn-background" class="background" alt="" decoding="async">
+    <img id="uranus-background" class="background" alt="" decoding="async">
+    <img id="neptune-background" class="background" alt="" decoding="async">
   </div>
   <div class="preloader" id="preloader" aria-label="Loading Mars">
     <video id="preloader-video" src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/5fc5651c-3b5d-4171-b507-87f7e635d1b4.mp4" muted playsinline preload="auto"></video>
@@ -219,24 +238,57 @@ var TO_MARS = BASE+'/5fc5651c-3b5d-4171-b507-87f7e635d1b4.mp4';
 var MERCURY = BASE+'/d6fb8b6b-c15e-4aaa-9cf7-45bbb5e33372.jpg';
 
 var planets = ['Mercury','Venus','Earth','Mars','Jupiter','Saturn','Uranus','Neptune'];
+// Journey order: scroll down travels to the next one, scroll up goes back.
+var order = ['mars','earth','venus','mercury','jupiter','saturn','uranus','neptune'];
 
 var states = {
- mars:  { name:'Mars',  next:'Earth',   number:'[03]', portal:TO_EARTH,  background:'mars-background',
+ mars:  { name:'Mars', clip:TO_MARS, background:'mars-background',
    facts:[['Distance:','About 228 million km (1.5 astronomical units).'],
           ['Year:','One Martian year is equal to 687 Earth days.'],
           ['Temperature:','Around -60 °C, dropping to -125 °C at the poles in winter.'],
           ['Atmosphere:','Very thin, consisting of 95% carbon dioxide, with frequent dust storms.']] },
- earth: { name:'Earth', next:'Venus',   number:'[02]', portal:TO_VENUS,  background:'earth-background',
+ earth: { name:'Earth', clip:TO_EARTH, background:'earth-background',
    facts:[['Distance:','149.6 million km from the Sun.'],
           ['Year:','365.25 Earth days.'],
           ['Temperature:','Average surface temperature around 15 °C.'],
           ['Atmosphere:','Mostly nitrogen and oxygen, supporting life and liquid water.']] },
- venus: { name:'Venus', next:'Mercury', number:'[06]', image:MERCURY,    background:'venus-background',
+ venus: { name:'Venus', clip:TO_VENUS, background:'venus-background',
    facts:[['Distance:','108.2 million km from the Sun.'],
           ['Year:','225 Earth days.'],
           ['Temperature:','Around 465 °C — the hottest planet in the Solar System.'],
-          ['Atmosphere:','Extremely dense, mostly carbon dioxide, with clouds of sulfuric acid.']] }
+          ['Atmosphere:','Extremely dense, mostly carbon dioxide, with clouds of sulfuric acid.']] },
+ mercury: { name:'Mercury', image:MERCURY, background:'mercury-background',
+   facts:[['Distance:','57.9 million km from the Sun — the closest planet.'],
+          ['Year:','Just 88 Earth days.'],
+          ['Temperature:','About 430 °C by day, down to -180 °C at night.'],
+          ['Atmosphere:','Almost none: a thin haze of oxygen, sodium and hydrogen.']] },
+ jupiter: { name:'Jupiter', image:'/examples/media/jupiter.jpg', background:'jupiter-background',
+   facts:[['Distance:','778.5 million km (5.2 astronomical units).'],
+          ['Year:','11.9 Earth years.'],
+          ['Temperature:','About -110 °C at the cloud tops.'],
+          ['Atmosphere:','Hydrogen and helium, home to the giant storm of the Great Red Spot.']] },
+ saturn: { name:'Saturn', image:'/examples/media/saturn.jpg', background:'saturn-background',
+   facts:[['Distance:','1.43 billion km (9.5 astronomical units).'],
+          ['Year:','29.4 Earth years.'],
+          ['Temperature:','About -140 °C.'],
+          ['Atmosphere:','Hydrogen and helium, wrapped in rings of ice and rock.']] },
+ uranus: { name:'Uranus', image:'/examples/media/uranus.jpg', background:'uranus-background',
+   facts:[['Distance:','2.87 billion km (19.2 astronomical units).'],
+          ['Year:','84 Earth years.'],
+          ['Temperature:','About -195 °C; it spins tipped on its side.'],
+          ['Atmosphere:','Hydrogen, helium and methane, which gives its pale blue-green colour.']] },
+ neptune: { name:'Neptune', image:'/examples/media/neptune.jpg', background:'neptune-background',
+   facts:[['Distance:','4.5 billion km (30 astronomical units).'],
+          ['Year:','165 Earth years.'],
+          ['Temperature:','About -200 °C.'],
+          ['Atmosphere:','Hydrogen, helium and methane, with the fastest winds in the Solar System.']] }
 };
+order.forEach(function(k, i){
+  var n = order[i+1];
+  states[k].nextKey = n || null;
+  states[k].next = n ? states[n].name : '';
+  states[k].number = n ? '[0'+(planets.indexOf(states[n].name)+1)+']' : '';
+});
 
 var current = 'mars';
 var body = document.body;
@@ -261,14 +313,16 @@ var sceneCanvas = document.getElementById('scene-canvas');
 var sceneCtx = sceneCanvas.getContext('2d');
 
 var firstRender = true;
+var showPortalImage = false;
 
 function render(){
   var state = states[current];
   experience.dataset.planet = current;
+  experience.classList.toggle('is-last', !state.nextKey);
   planetTitle.textContent = state.name.toUpperCase();
   nextName.textContent = state.next;
   nextNumber.textContent = state.number;
-  portalBtn.setAttribute('aria-label','Travel to '+state.next);
+  portalBtn.setAttribute('aria-label', state.next ? 'Travel to '+state.next : 'Last planet');
 
   factsEl.innerHTML = '';
   state.facts.forEach(function(f){
@@ -282,10 +336,15 @@ function render(){
 
   planetList.innerHTML = '';
   planets.forEach(function(p){
-    var span = document.createElement('span');
-    span.className = 'planet-item' + (p === state.name ? ' active' : '');
-    span.textContent = p;
-    planetList.appendChild(span);
+    var key = p.toLowerCase();
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'planet-item' + (key === current ? ' active' : '');
+    b.dataset.key = key;
+    b.textContent = p;
+    if(key === current) b.setAttribute('aria-current', 'true');
+    else b.setAttribute('aria-label', 'Travel to ' + p);
+    planetList.appendChild(b);
   });
 
   if(!firstRender){
@@ -298,22 +357,27 @@ function render(){
   document.querySelectorAll('.background').forEach(function(v){
     v.classList.toggle('is-visible', v.id === state.background);
   });
+  var bg = document.getElementById(state.background);
+  if(bg && bg.tagName === 'IMG' && !bg.getAttribute('src')) bg.src = state.image;
+  // Travel clips used as a backdrop hold on their last frame (the planet you arrived at).
+  if(bg && bg.tagName === 'VIDEO' && bg.id !== 'mars-background'){
+    var hold = function(){ try { bg.pause(); bg.currentTime = Math.max(0, (bg.duration||0) - .08); } catch(e){} };
+    if(bg.readyState >= 1) hold(); else bg.addEventListener('loadedmetadata', hold, {once:true});
+  }
 
-  if(state.image){
-    portalImage.style.visibility = '';
-    portalVideo.style.visibility = '';
-    portalImage.src = state.image;
-    showPortalImage = true;
-  } else {
+  var nx = state.nextKey ? states[state.nextKey] : null;
+  if(!nx) return;
+  if(nx.clip){
     showPortalImage = false;
-    if(portalVideo.getAttribute('src') !== state.portal){
-      portalVideo.src = state.portal;
+    if(portalVideo.getAttribute('src') !== nx.clip){
+      portalVideo.src = nx.clip;
       portalVideo.load();
     }
+  } else {
+    showPortalImage = true;
+    if(portalImage.getAttribute('src') !== nx.image) portalImage.src = nx.image;
   }
 }
-
-var showPortalImage = false;
 
 // ===== Preloader =====
 var preloadFinished = false;
@@ -373,7 +437,7 @@ function mediaReady(media){
 
 function startExperience(){
   var state = states[current];
-  var media = state.image ? portalImage : portalVideo;
+  var media = showPortalImage ? portalImage : portalVideo;
   mediaReady(media).then(function(){
     return revealMask();
   }).then(function(){
@@ -433,10 +497,11 @@ function resizeCanvas(){
 }
 window.addEventListener('resize', resizeCanvas);
 
-function drawCover(ctx, media){
+function drawCover(ctx, media, zoom){
+  if(!media) return;
   var mw = media.videoWidth || media.naturalWidth || 1;
   var mh = media.videoHeight || media.naturalHeight || 1;
-  var scale = Math.max(window.innerWidth/mw, window.innerHeight/mh);
+  var scale = Math.max(window.innerWidth/mw, window.innerHeight/mh) * (zoom || 1);
   var w = mw*scale, h = mh*scale;
   var x = (window.innerWidth-w)/2, y = (window.innerHeight-h)/2;
   try { ctx.drawImage(media, x, y, w, h); } catch(e){}
@@ -464,6 +529,7 @@ window.addEventListener('pointerleave', function(){ targetX = 0; targetY = 0; })
 var expansion = 0;
 var canvasOpacity = 1;
 var transitionActive = false;
+var transitionMedia = null;
 var frozenScene = false;
 var lastTime = null;
 
@@ -528,7 +594,7 @@ function draw(ts){
   var r = 90*(1-e)*scale;
   var rx = rotX*(1-e), ry = rotY*(1-e);
 
-  if(w > 1 && h > 1){
+  if(w > 1 && h > 1 && (transitionActive || states[current].nextKey)){
     var pts = buildRoundRectPoints(w, h, r);
     portalCtx.save();
     portalCtx.globalAlpha = canvasOpacity;
@@ -542,8 +608,8 @@ function draw(ts){
     portalCtx.clip();
     portalCtx.fillStyle = '#030303';
     portalCtx.fillRect(0,0,window.innerWidth,window.innerHeight);
-    var media = transitionActive ? transitionVideo : (states[current].image ? portalImage : portalVideo);
-    drawCover(portalCtx, media);
+    var media = transitionActive ? transitionMedia : (showPortalImage ? portalImage : portalVideo);
+    drawCover(portalCtx, media, transitionActive && media.tagName === 'IMG' ? 1.35 - .35*e : 1);
     if(transitionActive) drawShade(portalCtx);
     portalCtx.restore();
   }
@@ -597,35 +663,63 @@ function waitEvent(el, evt, timeout){
   });
 }
 
-function travel(){
-  if(busy || current === 'venus') return;
+var imgCache = {};
+function getImg(src){
+  if(!imgCache[src]){ var im = new Image(); im.decoding = 'async'; im.src = src; imgCache[src] = im; }
+  return imgCache[src];
+}
+function imgReady(im, timeout){
+  return new Promise(function(resolve){
+    if(im.complete && im.naturalWidth) return resolve();
+    var t = setTimeout(resolve, timeout||4000);
+    im.addEventListener('load', function(){ clearTimeout(t); resolve(); }, {once:true});
+    im.addEventListener('error', function(){ clearTimeout(t); resolve(); }, {once:true});
+  });
+}
+function delay(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+// Travel to any planet: forward, back, or straight to one picked from the list.
+function travel(to){
+  if(busy) return;
+  var idx = order.indexOf(current);
+  if(to === undefined) to = order[idx+1];
+  if(!to || to === current || !states[to]) return;
   busy = true;
   targetX = 0; targetY = 0;
-  var prevState = states[current];
-  var next = current === 'mars' ? 'earth' : 'venus';
-
-  transitionVideo.src = prevState.portal;
-  transitionVideo.load();
+  var tgt = states[to];
+  var bgEl = document.getElementById(tgt.background);
+  if(bgEl && bgEl.tagName === 'IMG' && !bgEl.getAttribute('src')) bgEl.src = tgt.image;
+  var ready;
+  if(tgt.clip){
+    transitionVideo.src = tgt.clip;
+    transitionVideo.load();
+    transitionMedia = transitionVideo;
+    ready = waitEvent(transitionVideo, 'canplaythrough', 2500);
+  } else {
+    transitionMedia = getImg(tgt.image);
+    ready = imgReady(transitionMedia, 4000);
+  }
   experience.classList.add('is-loading');
 
-  waitEvent(transitionVideo, 'canplaythrough', 1600).then(function(){
+  ready.then(function(){
     experience.classList.remove('is-loading','content-revealing','mask-revealing');
     experience.classList.add('is-transitioning');
-    transitionVideo.currentTime = 0;
-    transitionVideo.playbackRate = 1.3;
     canvasOpacity = 1;
     transitionActive = true;
+    if(!tgt.clip) return;
+    transitionVideo.currentTime = 0;
+    transitionVideo.playbackRate = 1.3;
     var p = transitionVideo.play();
     return (p && p.catch ? p.catch(function(){}) : Promise.resolve());
   }).then(function(){
     return animateValue(function(v){ expansion = v; }, 1100);
   }).then(function(){
-    return waitEvent(transitionVideo, 'ended', 4000);
+    return tgt.clip ? waitEvent(transitionVideo, 'ended', 4000) : delay(220);
   }).then(function(){
     sceneCtx.clearRect(0,0,window.innerWidth,window.innerHeight);
-    drawCover(sceneCtx, transitionVideo);
+    drawCover(sceneCtx, transitionMedia, 1);
     frozenScene = true;
-    current = next;
+    current = to;
     experience.classList.add('is-committing');
     render();
     return new Promise(function(resolve){
@@ -643,9 +737,9 @@ function travel(){
     return maskReveal;
   }).then(function(){
     setTimeout(function(){
-      transitionVideo.removeAttribute('src');
-      transitionVideo.load();
+      if(tgt.clip){ transitionVideo.removeAttribute('src'); transitionVideo.load(); }
       busy = false;
+      warmNext();
     }, 450);
   }).catch(function(){
     transitionActive = false;
@@ -657,15 +751,45 @@ function travel(){
     busy = false;
   });
 }
+function back(){ var i = order.indexOf(current); if(i > 0) travel(order[i-1]); }
+// Fetch the next planet's picture early so travelling there starts at once.
+function warmNext(){
+  var n = states[order[order.indexOf(current)+1]];
+  if(n && n.image) getImg(n.image);
+}
 
-portalBtn.addEventListener('click', travel);
+portalBtn.addEventListener('click', function(){ travel(); });
+planetList.addEventListener('click', function(e){
+  var b = e.target.closest && e.target.closest('.planet-item');
+  if(b && b.dataset.key) travel(b.dataset.key);
+});
 var hintEl = document.getElementById('pj-hint'), wheelAt = 0, touchY = null;
-function updateHint(){ hintEl.textContent = current === 'venus' ? 'Final stop — thanks for travelling' : 'Click the portal or scroll ↓ to travel'; }
+function updateHint(){
+  hintEl.textContent = current === 'neptune' ? 'Last planet — keep scrolling ↓ for the other example' :
+    (current === 'mars' ? 'Click the portal or scroll ↓ to travel' : 'Scroll ↓ to travel on · scroll ↑ to go back');
+}
 var _render = render; render = function(){ _render(); updateHint(); };
-window.addEventListener('wheel', function(e){ if(e.deltaY > 20 && Date.now()-wheelAt > 1500){ wheelAt = Date.now(); travel(); } }, {passive:true});
+window.dmAtEnd = function(){ return current === 'neptune' && !busy; };
+window.addEventListener('wheel', function(e){
+  if(Math.abs(e.deltaY) < 20 || Date.now()-wheelAt < 1500 || busy) return;
+  if(e.deltaY > 0 && current === 'neptune') return;
+  wheelAt = Date.now();
+  if(e.deltaY > 0) travel(); else back();
+}, {passive:true});
 window.addEventListener('touchstart', function(e){ touchY = e.touches[0].clientY; }, {passive:true});
-window.addEventListener('touchend', function(e){ if(touchY !== null && touchY - e.changedTouches[0].clientY > 50) travel(); touchY = null; }, {passive:true});
-document.querySelectorAll('.planet-list').forEach(function(l){ l.addEventListener('pointerover', function(){ cursor.classList.add('is-enter'); cursor.querySelector('.cursor-label').textContent=''; }); l.addEventListener('pointerout', function(){ cursor.classList.remove('is-enter'); cursor.querySelector('.cursor-label').textContent='Enter'; }); });
+window.addEventListener('touchend', function(e){
+  if(touchY === null) return;
+  var d = touchY - e.changedTouches[0].clientY; touchY = null;
+  if(e.target.closest && e.target.closest('.planet-list,.dmn,.dmp,.back-link')) return;
+  if(d > 50 && current !== 'neptune') travel(); else if(d < -50) back();
+}, {passive:true});
+window.addEventListener('keydown', function(e){
+  if(e.key === 'ArrowDown' && current !== 'neptune') travel();
+  if(e.key === 'ArrowUp') back();
+});
+// Over the planet list the normal pointer shows, so it's clear the names can be clicked.
+planetList.addEventListener('pointerover', function(){ cursor.style.opacity = '0'; });
+planetList.addEventListener('pointerout', function(){ cursor.style.opacity = ''; });
 
 // ===== Boot =====
 document.querySelectorAll('.background').forEach(function(v){
@@ -680,5 +804,6 @@ runPreloader();
 })();
 </script>
 <script src="/examples/dm-promo.js" defer></script>
+<script src="/examples/dm-next.js" defer></script>
 </body>
 </html>

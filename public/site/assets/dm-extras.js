@@ -493,7 +493,9 @@
 /* Examples open inside the site: the water slides away to the left and the example glides in from the right. */
 (function () {
   var box = null, busy = 0, oldTitle = "", fetched = {};
-  var NAMES = { "feather-atlas": "Feather Atlas", "planet-jumping": "Planet Jumping" };
+  var NAMES = { "feather-atlas": "Feather Atlas", "planet-jumping": "Planet Jumping", "freight-line": "Freight Line", "world-model": "World Model" };
+  var ORDER = ["feather-atlas", "planet-jumping", "freight-line", "world-model"];
+  function nextOf() { var f = box && box.querySelector("iframe:last-of-type"), k = f ? f.getAttribute("src").split("/").pop().replace(/\.html$/, "") : ""; return "/examples/" + ORDER[(ORDER.indexOf(k) + 1) % ORDER.length] + ".html"; }
   function nameOf(u) { var k = u.split("/").pop().replace(/\.html$/, ""); return NAMES[k] || k.replace(/-/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
   // Warm the example up as soon as a finger or mouse gets near its card, so it opens fast.
   function warm(u) {
@@ -545,7 +547,7 @@
   }, 300);
   window.addEventListener("message", function (e) {
     if (e.origin !== location.origin || !e.data) return;
-    if (e.data.dm === "next-example") open("/examples/planet-jumping.html");
+    if (e.data.dm === "next-example") open(typeof e.data.url === "string" && isEx(e.data.url) ? e.data.url : nextOf());
     if (e.data.dm === "close-example") close();
   });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
