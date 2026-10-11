@@ -191,33 +191,49 @@
     if (e.target && e.target.tagName === "IMG") e.preventDefault();
   });
 })();
-/* Home: "Rise to NotePin" — the opposite of "View our work": the view lifts up through the water surface into the NotePin page */
+/* NotePin: the Projects water scene showing only the NotePin tiles. From Home the
+   same dive plays upwards (theme flips the camera for /notepin/). */
 (function () {
-  var btn, busy = false;
-  function onHome() { return location.pathname === "/" || location.pathname === ""; }
-  function entered() { return !document.querySelector(".js-loader:not(.is-hidden)") && document.body.classList.contains("is-entered") || window.__dmEntered; }
+  var btn, last = "";
+  function isNp(p) { return /^\/notepin\/?$/.test(p); }
+  function isPr(p) { return /^\/projects\/?$/.test(p); }
+  function names(np) {
+    return (window.projects || []).filter(function (e) {
+      var c = e.project.project_grid_category || [];
+      return np ? c.indexOf("experiment") > -1 && /^dm-np-/.test(e.images[0].name) : c.length && c.indexOf("experiment") < 0;
+    }).map(function (e) { return e.project.title; });
+  }
+  function apply(np) {
+    var G = window.__dmG, PM = G && G.ProjectMenu;
+    if (!PM || !PM.projects || !PM.projects.children.length || !window.__dmEmit) return false;
+    window.__dmEmit("ProjectFilters:change", names(np)); return true;
+  }
   function make() {
     btn = document.createElement("a");
-    btn.href = "/notepin"; btn.className = "dm-rise"; btn.setAttribute("aria-label", "Rise up to PLAUD NotePin");
+    btn.href = "/notepin/"; btn.className = "dm-rise"; btn.setAttribute("aria-label", "Rise up to PLAUD NotePin");
     btn.innerHTML = '<span class="dm-rise__arrow">↑</span><span>PLAUD NotePin</span>';
     document.body.appendChild(btn);
-    btn.addEventListener("click", rise);
+    btn.addEventListener("click", function (e) {
+      e.preventDefault(); e.stopPropagation();
+      var H = window.__dmG && window.__dmG.Highway;
+      if (H && H.redirect) H.redirect(location.origin + "/notepin/"); else location.href = "/notepin/";
+    });
   }
-  function rise(e) {
-    e.preventDefault(); e.stopPropagation(); if (busy) return; busy = true;
-    var A = window.__dmAudio; try { A && A.filterTo && A.filterTo(22000, 1.4); } catch (x) {}
-    var sky = document.createElement("div"); sky.className = "dm-rise-sky"; document.body.appendChild(sky);
-    document.documentElement.classList.add("dm-rising");
-    requestAnimationFrame(function () { sky.classList.add("is-on"); });
-    setTimeout(function () { location.href = "/notepin"; }, 1700);
-  }
-  var shownAt = 0;
+  // Projects <-> NotePin share one scene: switch with a normal page load.
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest("a[href]"); if (!a) return;
+    var to = new URL(a.href, location.href).pathname, from = location.pathname;
+    if ((isNp(from) && isPr(to)) || (isPr(from) && isNp(to))) { e.preventDefault(); e.stopPropagation(); location.href = to; }
+  }, true);
+  var pending = null, shownAt = 0;
   setInterval(function () {
     if (!document.body) return; if (!btn) make();
-    var loaderGone = !document.querySelector(".loader.js-loader") || getComputedStyle(document.querySelector(".loader.js-loader")).visibility === "hidden" || getComputedStyle(document.querySelector(".loader.js-loader")).display === "none";
-    var show = onHome() && loaderGone;
-    if (show && !shownAt) shownAt = Date.now();
-    if (!show) shownAt = 0;
+    var p = location.pathname;
+    if (p !== last) { last = p; pending = isNp(p) ? true : isPr(p) ? false : null; }
+    if (pending !== null && apply(pending)) pending = null;
+    var L = document.querySelector(".loader.js-loader"), cs = L && getComputedStyle(L);
+    var show = p === "/" && (!L || cs.visibility === "hidden" || cs.display === "none");
+    if (show && !shownAt) shownAt = Date.now(); if (!show) shownAt = 0;
     btn.classList.toggle("is-visible", show && Date.now() - shownAt > 1500);
-  }, 300);
+  }, 250);
 })();
