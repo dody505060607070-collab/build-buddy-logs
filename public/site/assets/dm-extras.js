@@ -50,7 +50,8 @@
   }
   setInterval(function () {
     var b = muteBtn();
-    if (b && !b.style.getPropertyValue("--dm-art")) render();
+    var inter = /^\/(notepin|world)(\/|$)/.test(location.pathname);
+    if (b && (!b.style.getPropertyValue("--dm-art") || inter !== panel.classList.contains("is-inter"))) render();
     if (!fx || alt.paused) return;
     var t = fx.ctx.currentTime, gd = guide(), inWorld = /^\/world/.test(location.pathname);
     if (!gd) {
@@ -86,17 +87,22 @@
         '<span><b>' + t.title + '</b><small>' + t.artist + '</small></span>' +
         '<i class="dm-music__eq" aria-hidden="true"><em></em><em></em><em></em></i></button></li>';
     }).join("") +
+    '<li class="dm-music__inter"><button type="button" class="dm-music__track dm-music__track--inter is-active">' +
+    '<img src="/site/assets/art-interstellar.jpg" alt="" width="40" height="40"><span><b>Interstellar</b><small>Hans Zimmer</small></span>' +
+    '<i class="dm-music__eq" aria-hidden="true"><em></em><em></em><em></em></i></button></li>' +
     '</ul><button type="button" class="dm-music__mute"><span class="dm-music__mute-icon" aria-hidden="true"></span><span class="dm-music__mute-text">Mute</span></button>';
   document.body.appendChild(panel);
 
   function render() {
     panel.querySelectorAll(".dm-music__track").forEach(function (el) {
-      el.classList.toggle("is-active", +el.dataset.i === current);
+      if (el.dataset.i != null) el.classList.toggle("is-active", +el.dataset.i === current);
     });
+    var inter = /^\/(notepin|world)(\/|$)/.test(location.pathname);
+    panel.classList.toggle("is-inter", inter);
     panel.classList.toggle("is-muted", muted);
     panel.querySelector(".dm-music__mute-text").textContent = muted ? "Unmute" : "Mute";
     var b = muteBtn();
-    if (b) b.style.setProperty("--dm-art", "url('" + TRACKS[current].art + "')");
+    if (b) b.style.setProperty("--dm-art", "url('" + (inter ? "/site/assets/art-interstellar.jpg" : TRACKS[current].art) + "')");
   }
   function play() {
     if (muted) return;
@@ -119,6 +125,7 @@
     var b = e.target.closest && e.target.closest(".js-global-mute-btn");
     if (b) { e.preventDefault(); e.stopImmediatePropagation(); open(!panel.classList.contains("is-open")); render(); return; }
     var t = e.target.closest && e.target.closest(".dm-music__track");
+    if (t && t.classList.contains("dm-music__track--inter")) { if (muted) { muted = false; window.__dmMusicMuted = false; play(); } render(); return; }
     if (t) { current = +t.dataset.i; muted = false; play(); render(); return; }
     if (e.target.closest && e.target.closest(".dm-music__mute")) {
       muted = !muted; window.__dmMusicMuted = muted;
@@ -295,7 +302,7 @@
    see-through background with features spread down the page (no project tiles). It opens
    on its own timer, so it never waits on the 3D scene. */
 (function () {
-  var el, shownAt = 0, entered = 0, leftAt = 0;
+  var el, shownAt = 0, entered = 0, leftAt = 0, doneAt = 0;
   document.addEventListener("click", function (e) {
     if (e.target.closest && e.target.closest(".js-enter-btn, .js-enter-no-audio-btn, .loader button")) entered = Date.now();
   }, true);
@@ -358,7 +365,10 @@
     var L = document.querySelector(".loader.js-loader"), cs = L && getComputedStyle(L);
     var ready = !L || cs.visibility === "hidden" || cs.display === "none" || +cs.opacity < .1;
     // Show after the rise finishes, or 4s after Enter whatever the scene is doing.
-    if ((ready && Date.now() - shownAt > 1200) || (entered && Date.now() - entered > 4000) || Date.now() - shownAt > 15000) el.classList.add("is-visible");
+    // Appear only once the rise above the water has finished (fallback if the scene stalls).
+    var H = window.__dmG && window.__dmG.Highway, moving = H && H.running;
+    if (moving || !ready) doneAt = 0; else if (!doneAt) doneAt = Date.now();
+    if ((doneAt && Date.now() - doneAt > 350) || Date.now() - shownAt > 20000) el.classList.add("is-visible");
   }, 200);
 })();
 
