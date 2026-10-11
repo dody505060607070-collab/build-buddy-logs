@@ -256,7 +256,11 @@
   (function tiles() {
     var p = location.pathname, PMg = window.__dmG && window.__dmG.ProjectMenu && window.__dmG.ProjectMenu.projects;
     var want = isPr(p) || (!isNp(p) && !window.__dmFromNp && !(window.__dmGoingNp && Date.now() - window.__dmGoingNp < 7000));
-    if (PMg && "visible" in PMg && PMg.visible !== want) PMg.visible = want;
+    if (PMg && "visible" in PMg && PMg.visible !== want) {
+      PMg.visible = want;
+      // Coming back into view: reload the cards exactly like pressing "All", so none stay missing.
+      if (want) setTimeout(function () { if (!apply(isNp(location.pathname))) pending = isNp(location.pathname); }, 60);
+    }
     requestAnimationFrame(tiles);
   })();
   setInterval(function () {
